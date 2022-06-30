@@ -2,6 +2,7 @@
 // @name         Bilibili 啵啵表情包
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
+// @license      BSD-3
 // @version      0.1.0
 // @description  在Bilibili 表情包中增加啵啵系列
 // @author       as042971
@@ -56,7 +57,7 @@
         [3333427, "饿饿", "https://i0.hdslb.com/bfs/album/94422b4d3ae81e84ddb82f8439ef773cbdd8e709.jpg"],
         [3333428, "星星眼", "https://i0.hdslb.com/bfs/album/4e522af3fe0682d23bcbad98a01234220585418b.jpg"],
         [3333429, "嘻嘻", "https://i0.hdslb.com/bfs/album/52797832ae62644abcb5a246d547c89e5ff6c2cf.jpg"],
-        [3333431, "啊", "https://i0.hdslb.com/bfs/album/a543e79390f7ab501d1a8610fb9508e2045140c9.jpg"],
+        [3333431, "别急", "https://i0.hdslb.com/bfs/album/a543e79390f7ab501d1a8610fb9508e2045140c9.jpg"],
         [3333432, "呃呃", "https://i0.hdslb.com/bfs/album/800cbf45317f0b4466b674c1d98d8bc7fb92152f.jpg"],
         [3333433, "要哭了", "https://i0.hdslb.com/bfs/album/90b5b2d1c3c99056a1b12cc4f885b027ac405a40.jpg"],
         [3333434, "微笑", "https://i0.hdslb.com/bfs/album/5a9b5cde55216d1a2028b47c64f72403f8bf39c6.jpg"],
