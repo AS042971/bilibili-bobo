@@ -4,11 +4,11 @@
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
 // @version      0.1.0
-// @description  在Bilibili 表情包中增加啵啵系列
+// @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
 // @icon         https://experiments.sparanoid.net/favicons/v2/www.bilibili.com.ico
-// @require      https://jpillora.com/xhook/dist/xhook.min.js
+// @require      https://unpkg.com/xhook@1.4.9/dist/xhook.min.js
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
