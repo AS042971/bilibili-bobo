@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.1.0
+// @version      0.1.1
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -205,7 +205,7 @@
             if (content.innerHTML.includes('【啵啵_')) {
                 let innerHTML = content.innerHTML;
                 for (let item in chn_emote_dict) {
-                    innerHTML = innerHTML.replace(item, chn_emote_dict[item]);
+                    innerHTML = innerHTML.replace(new RegExp(item,"gm"), chn_emote_dict[item]);
                 }
                 content.innerHTML = innerHTML;
             }
