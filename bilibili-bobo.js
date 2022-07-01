@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.1.1
+// @version      0.1.2
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -27,11 +27,16 @@
         [3333116, "你说谁唐", "https://i0.hdslb.com/bfs/album/51e6222e60a5c53fffa7259a6d1e26593791ee6f.jpg"],
 
         // 来自 @爱茉-Merry-
-        // https://t.bilibili.com/677042972319023129
-        [3333211, "吃瓜", "https://i0.hdslb.com/bfs/album/42fff4f4aa4ba7ad5a7ee448f1a952a1a6753741.png"],
-        [3333212, "别在这理发店", "https://i0.hdslb.com/bfs/album/101dbcd54aa6a6a5fc253ea9095748a65da7ce4a.png"],
-        [3333213, "要牛奶钱", "https://i0.hdslb.com/bfs/album/6ce670604e2a98810d2dcd97d458750ea8cc0d79.png"],
-        [3333214, "大傻呗2", "https://i0.hdslb.com/bfs/album/9c195b9eaf46405059aeb8829a9945d6c44375ff.png"],
+        // https://t.bilibili.com/677805689726304279
+        [3333211, "吃瓜", "https://i0.hdslb.com/bfs/new_dyn/bdd4c8815ef2c491c935d06c5eb36cc1173530952.png"],
+        [3333212, "别在这理发店", "https://i0.hdslb.com/bfs/new_dyn/5e06547caaf3d72d0d54ace1bb26776c173530952.png"],
+        [3333213, "要牛奶钱", "https://i0.hdslb.com/bfs/new_dyn/8457f7cb02d9a7f57db13537be0140d5173530952.png"],
+        [3333214, "大傻呗2", "https://i0.hdslb.com/bfs/new_dyn/622049f688365262102f6b7ec084fd4d173530952.png"],
+        [3333215, "绿码", "https://i0.hdslb.com/bfs/new_dyn/a4ff8b3a33852683392a4896adf7e93a173530952.png"],
+        [3333216, "熬夜啵比", "https://i0.hdslb.com/bfs/new_dyn/c363244428dcbe1f21b71489b01e3949173530952.png"],
+        [3333217, "喝涮锅水", "https://i0.hdslb.com/bfs/new_dyn/32f960833820746725d72898a29efd3d173530952.png"],
+        [3333218, "结婚", "https://i0.hdslb.com/bfs/new_dyn/86686f3cbfa089027a20ab3029803db0173530952.png"],
+        [3333219, "结婚2", "https://i0.hdslb.com/bfs/new_dyn/2d3f4f0c3a1a2489e72257959ac34ae8173530952.png"],
 
         // 来自 @卡古拉的醋昆布e
         // https://t.bilibili.com/675526380607242246
@@ -61,6 +66,14 @@
         [3333432, "呃呃", "https://i0.hdslb.com/bfs/album/800cbf45317f0b4466b674c1d98d8bc7fb92152f.jpg"],
         [3333433, "要哭了", "https://i0.hdslb.com/bfs/album/90b5b2d1c3c99056a1b12cc4f885b027ac405a40.jpg"],
         [3333434, "微笑", "https://i0.hdslb.com/bfs/album/5a9b5cde55216d1a2028b47c64f72403f8bf39c6.jpg"],
+
+        // 来自 @原来是小瘪终极
+        // https://t.bilibili.com/677009063564804096
+        [3333511, "飞！", "https://i0.hdslb.com/bfs/album/232079a3a2135966a4182aacc6744dbee9a3454d.jpg"],
+
+        // 来自 @馒头卡今天吃什么
+        // https://t.bilibili.com/667973375719636996
+        [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/album/e02a273e3a8a9f3d3f38a3f0d52810dfecf701ce.png"],
 
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
@@ -104,7 +117,7 @@
     }
     let bobo = {
         "id": 3333,
-        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot)",
+        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么)",
         "url": "https://i0.hdslb.com/bfs/new_dyn/3e1656dd6dd1255f65fb91389dd73f775858138.png",
         "mtime": 1654321000,
         "type": 3,
@@ -201,7 +214,6 @@
                     attachEl(reply);
                 });
             }
-            console.log(content.innerHTML)
             if (content.innerHTML.includes('【啵啵_')) {
                 let innerHTML = content.innerHTML;
                 for (let item in chn_emote_dict) {
