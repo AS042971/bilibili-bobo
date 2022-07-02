@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.1.3
+// @version      0.1.4
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -78,10 +78,10 @@
 
         // 来自 @四等双足多用途北极熊
         // https://t.bilibili.com/677933357627080774
-        [3333711, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
-        [3333712, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
-        [3333713, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/1ac7d26c47460d0dd4ec9ae1cb8f89725083548.png"],
-        [3333714, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/36d7d7f3653b2e3a147d6c3942b154a15083548.png"],
+        [3333711, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
+        [3333712, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
+        [3333713, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/1ac7d26c47460d0dd4ec9ae1cb8f89725083548.png"],
+        [3333714, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/36d7d7f3653b2e3a147d6c3942b154a15083548.png"],
 
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
