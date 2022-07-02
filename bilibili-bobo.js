@@ -3,10 +3,11 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.1.2
+// @version      0.1.3
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
+// @exclude      https://live.bilibili.com/*
 // @icon         https://experiments.sparanoid.net/favicons/v2/www.bilibili.com.ico
 // @require      https://unpkg.com/xhook@1.4.9/dist/xhook.min.js
 // @run-at       document-start
@@ -75,6 +76,13 @@
         // https://t.bilibili.com/667973375719636996
         [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/album/e02a273e3a8a9f3d3f38a3f0d52810dfecf701ce.png"],
 
+        // 来自 @四等双足多用途北极熊
+        // https://t.bilibili.com/677933357627080774
+        [3333711, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
+        [3333712, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
+        [3333713, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/1ac7d26c47460d0dd4ec9ae1cb8f89725083548.png"],
+        [3333714, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/36d7d7f3653b2e3a147d6c3942b154a15083548.png"],
+
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
         [3333191, "桂物敬礼", "https://i0.hdslb.com/bfs/album/f8f8de3ef0b36b69fbff630a30ac33aee1fdfc96.png"],
@@ -117,7 +125,7 @@
     }
     let bobo = {
         "id": 3333,
-        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么)",
+        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊)",
         "url": "https://i0.hdslb.com/bfs/new_dyn/3e1656dd6dd1255f65fb91389dd73f775858138.png",
         "mtime": 1654321000,
         "type": 3,
