@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.1.4
+// @version      0.2.0
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -78,10 +78,10 @@
 
         // 来自 @四等双足多用途北极熊
         // https://t.bilibili.com/677933357627080774
-        [3333711, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
-        [3333712, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
-        [3333713, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/1ac7d26c47460d0dd4ec9ae1cb8f89725083548.png"],
-        [3333714, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/36d7d7f3653b2e3a147d6c3942b154a15083548.png"],
+        [3333711, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
+        [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
+        [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/be42907be36256ab4b28b3eff72dcf965083548.png"],
+        [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/f78a61710285156baae135811721bda95083548.png"],
 
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
@@ -206,21 +206,28 @@
         }
 
         function attachEl(item) {
-            let injectWrap = item.querySelector('.con .info');
 
+            let injectWrap = item.querySelector('.info');
             // .text - comment content
             // .text-con - reply content
-            let content = item.querySelector('.con .text') || item.querySelector('.reply-con .text-con');
+            let content = item.querySelector('.con .text') || item.querySelector('.reply-con .text-con') || injectWrap?.querySelector('.content') || item.querySelector('.content');
             let id = item.dataset.id;
             let avID = window.aid;
 
             // Simple way to attach element on replies initially loaded with comment
             // which wouldn't trigger mutation inside observeComments
-            let replies = item.querySelectorAll('.con .reply-box .reply-item');
+            let replies = item.querySelectorAll('.con .reply-box .reply-item')
+            if (replies.length == 0) {
+                replies = item.querySelectorAll('.sub-preview-item');
+            }
+
             if (replies.length > 0) {
                 [...replies].map(reply => {
                     attachEl(reply);
                 });
+            }
+            if (!content) {
+                return;
             }
             if (content.innerHTML.includes('【啵啵_')) {
                 let innerHTML = content.innerHTML;
@@ -231,48 +238,49 @@
             }
         }
 
+        function observeCommentList(commentList) {
+            // Directly attach elements for pure static server side rendered comments
+            // and replies list. Used by zhuanlan posts with reply hash in URL.
+            // TODO: need a better solution
+
+            [...commentList.querySelectorAll('.list-item, .reply-item')].map(item => {
+                attachEl(item);
+            });
+
+            const observer = new MutationObserver((mutationsList, observer) => {
+
+                for (const mutation of mutationsList) {
+
+                    if (mutation.type === 'childList') {
+
+                        debug('observed mutations', [...mutation.addedNodes].length);
+
+                        [...mutation.addedNodes].map(item => {
+                            attachEl(item);
+
+                            // Check if the comment has replies
+                            // I check replies here to make sure I can disable subtree option for
+                            // MutationObserver to get better performance.
+                            let replies = item.querySelectorAll('.con .reply-box .reply-item');
+
+                            if (replies.length > 0) {
+                                observeComments(item)
+                                debug(item.dataset.id + ' has rendered reply(ies)', replies.length);
+                            }
+                        })
+                    }
+                }
+            });
+            observer.observe(commentList, { attributes: false, childList: true, subtree: false });
+        }
+
         function observeComments(wrapper) {
             // .comment-list - general list for video, zhuanlan, and dongtai
             // .reply-box - replies attached to specific comment
-            let commentLists = wrapper ? wrapper.querySelectorAll('.comment-list, .reply-box') : document.querySelectorAll('.comment-list, .reply-box');
+            let commentLists = wrapper ? wrapper.querySelectorAll('.comment-list, .reply-box') : document.querySelectorAll('.comment-list, .reply-box, .reply-list');
 
             if (commentLists) {
-
-                [...commentLists].map(commentList => {
-
-                    // Directly attach elements for pure static server side rendered comments
-                    // and replies list. Used by zhuanlan posts with reply hash in URL.
-                    // TODO: need a better solution
-                    [...commentList.querySelectorAll('.list-item, .reply-item')].map(item => {
-                        attachEl(item);
-                    });
-
-                    const observer = new MutationObserver((mutationsList, observer) => {
-
-                        for (const mutation of mutationsList) {
-
-                            if (mutation.type === 'childList') {
-
-                                debug('observed mutations', [...mutation.addedNodes].length);
-
-                                [...mutation.addedNodes].map(item => {
-                                    attachEl(item);
-
-                                    // Check if the comment has replies
-                                    // I check replies here to make sure I can disable subtree option for
-                                    // MutationObserver to get better performance.
-                                    let replies = item.querySelectorAll('.con .reply-box .reply-item');
-
-                                    if (replies.length > 0) {
-                                        observeComments(item)
-                                        debug(item.dataset.id + ' has rendered reply(ies)', replies.length);
-                                    }
-                                })
-                            }
-                        }
-                    });
-                    observer.observe(commentList, { attributes: false, childList: true, subtree: false });
-                });
+                [...commentLists].map(observeCommentList);
             }
         }
 
@@ -281,9 +289,7 @@
 
         // .bb-comment loads dynamcially for dontai and videos. So observe it first
         const wrapperObserver = new MutationObserver((mutationsList, observer) => {
-
             for (const mutation of mutationsList) {
-
                 if (mutation.type === 'childList') {
 
                     [...mutation.addedNodes].map(item => {
@@ -291,13 +297,15 @@
 
                         if (item.classList?.contains('bb-comment')) {
                             debug('mutation wrapper added (found target)', item);
-
                             observeComments(item);
 
                             // Stop observing
                             // TODO: when observer stops it won't work for dynamic homepage ie. https://space.bilibili.com/703007996/dynamic
                             // so disable it here. This may have some performance impact on low-end machines.
                             // wrapperObserver.disconnect();
+                        }
+                        if (item.classList?.contains('reply-item')) {
+                            attachEl(item);
                         }
                     })
                 }
