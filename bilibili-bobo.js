@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.2.2
+// @version      0.2.3
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -69,6 +69,13 @@
         [3333433, "要哭了", "https://i0.hdslb.com/bfs/album/90b5b2d1c3c99056a1b12cc4f885b027ac405a40.jpg"],
         [3333434, "微笑", "https://i0.hdslb.com/bfs/album/5a9b5cde55216d1a2028b47c64f72403f8bf39c6.jpg"],
 
+        // 来自 @玉桂狗美图分享bot
+        // https://t.bilibili.com/678266565489066008
+        [3333441, "31", "https://i0.hdslb.com/bfs/new_dyn/1da0233090730f5212a36a86014ad1fe28020311.png"],
+        [3333442, "呜呜", "https://i0.hdslb.com/bfs/new_dyn/8eefe811b1f4f06c6e6186d0f1c5816628020311.png"],
+        [3333443, "耶", "https://i0.hdslb.com/bfs/new_dyn/026d0db9739486319b527353695e94ed28020311.png"],
+        [3333444, "害羞", "https://i0.hdslb.com/bfs/new_dyn/7c4e948b0bb51f3495db4562935391dd28020311.png"],
+
         // 来自 @原来是小瘪终极
         // https://t.bilibili.com/677009063564804096
         [3333511, "飞！", "https://i0.hdslb.com/bfs/album/232079a3a2135966a4182aacc6744dbee9a3454d.jpg"],
@@ -79,10 +86,10 @@
 
         // 来自 @四等双足多用途北极熊
         // https://t.bilibili.com/677933357627080774
-        [3333711, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
-        [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
-        [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/be42907be36256ab4b28b3eff72dcf965083548.png"],
-        [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/f78a61710285156baae135811721bda95083548.png"],
+        [3333711, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/652bd99b8073860cb21b5b111672003f1648242323.png"],
+        [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/a81c1ac0892b4d383758ef6e0d8dac821648242323.png"],
+        [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/8be8ac2255438b617cbd6525c87382521648242323.png"],
+        [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/5c85e9782af7ccdbd8541835830189b91648242323.png"],
 
         // 来自 @啵啵XXXIX
         // https://t.bilibili.com/678369275334885380
@@ -222,7 +229,7 @@
             for (let emote_name in reply_emote_dict) {
                 if (item.content.message.includes(emote_name)) {
                     let replace = reply_emote_dict[emote_name];
-                    item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), replace[0]);
+                    item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), " "+replace[0]);
                     item.content.emote[replace[0]] = replace[1];
                 }
             }
@@ -266,6 +273,11 @@
         } else if (request.url.includes('//api.bilibili.com/x/v2/reply/main')) {
             // 手机网页用的是XHR...
             let response_json = JSON.parse(response.text);
+            if (response_json.data.top_replies) {
+                for (let i in response_json.data.top_replies) {
+                    injectReplyItem(response_json.data.top_replies[i]);
+                }
+            }
             for (let i in response_json.data.replies) {
                 injectReplyItem(response_json.data.replies[i]);
             }
@@ -284,6 +296,11 @@
                             const callbackName = node.src.match(/callback=(.*?)&/)[1];
                             const originFunc = window[callbackName];
                             window[callbackName] = (value) => {
+                                if (value.data.top_replies) {
+                                    for (let i in value.data.top_replies) {
+                                        injectReplyItem(value.data.top_replies[i]);
+                                    }
+                                }
                                 for (let i in value.data.replies) {
                                     injectReplyItem(value.data.replies[i]);
                                 }
