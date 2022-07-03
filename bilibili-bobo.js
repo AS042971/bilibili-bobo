@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.2.0
+// @version      0.2.1
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -94,13 +94,6 @@
         [3333293, "桂物抱抱", "https://i0.hdslb.com/bfs/album/187fbc36bbf5efb168932a5591a120cdb840dd1d.png"],
     ]
 
-    let emote_dict = {}
-    let chn_emote_dict = {}
-    emote_source.forEach(function (arr){
-        emote_dict["[啵啵_" + arr[1] + "]"] = arr[2];
-        chn_emote_dict["【啵啵_" + arr[1] + "】"] = '<img src="' + arr[2] + '" alt="[啵啵_' + arr[1] + ']">';
-    });
-
     let getEmote = function(arr) {
         return {
                 "id": arr[0],
@@ -123,6 +116,22 @@
                 "activity": null
             }
     }
+    let getReplyEmote = function(arr) {
+        return {
+            "id": arr[0],
+            "package_id": 3333,
+            "state": 0,
+            "type": 3,
+            "attr": 0,
+            "text": "[啵啵_" + arr[1] + "]",
+            "url": arr[2],
+            "meta": {
+                "size": 2
+            },
+            "mtime": 1654321000,
+            "jump_title": arr[1]
+        }
+    }
     let bobo = {
         "id": 3333,
         "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊)",
@@ -142,6 +151,13 @@
         }
     }
 
+    let emote_dict = {}
+    let chn_emote_dict = {}
+    emote_source.forEach(function (arr){
+        emote_dict["[啵啵_" + arr[1] + "]"] = arr[2];
+        chn_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", getReplyEmote(arr)];
+    });
+
     let injectDynamicItem = function(item) {
         if (item && "modules" in item && "module_dynamic" in item.modules && "desc" in item.modules.module_dynamic && item.modules.module_dynamic.desc && "rich_text_nodes" in item.modules.module_dynamic.desc) {
             for(let node of item.modules.module_dynamic.desc.rich_text_nodes) {
@@ -158,6 +174,25 @@
         }
         if (item && "orig" in item && item.orig) {
             injectDynamicItem(item.orig);
+        }
+    }
+    let injectReplyItem = function(item) {
+        if (item.content.message.includes('【')) {
+            if (!('emote' in item.content)) {
+                item.content.emote = {};
+            }
+            for (let emote_name in chn_emote_dict) {
+                if (item.content.message.includes(emote_name)) {
+                    let replace = chn_emote_dict[emote_name];
+                    item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), replace[0]);
+                    item.content.emote[replace[0]] = replace[1];
+                }
+            }
+        }
+        if ('replies' in item) {
+            for (let idx in item.replies) {
+                injectReplyItem(item.replies[idx]);
+            }
         }
     }
 
@@ -193,126 +228,27 @@
         }
     });
 
-    // 评论区通过修改网页完成（感谢 @Sparanoid）
-    window.addEventListener('load', () => {
-        const DEBUG = false;
-        const NAMESPACE = 'bilibili-bobo-emoji';
-
-        console.log(`${NAMESPACE} loaded`);
-        function debug(description = '', msg = '', force = false) {
-            if (DEBUG || force) {
-                console.log(`${NAMESPACE}: ${description}`, msg)
-            }
-        }
-
-        function attachEl(item) {
-
-            let injectWrap = item.querySelector('.info');
-            // .text - comment content
-            // .text-con - reply content
-            let content = item.querySelector('.con .text') || item.querySelector('.reply-con .text-con') || injectWrap?.querySelector('.content') || item.querySelector('.content');
-            let id = item.dataset.id;
-            let avID = window.aid;
-
-            // Simple way to attach element on replies initially loaded with comment
-            // which wouldn't trigger mutation inside observeComments
-            let replies = item.querySelectorAll('.con .reply-box .reply-item')
-            if (replies.length == 0) {
-                replies = item.querySelectorAll('.sub-preview-item');
-            }
-
-            if (replies.length > 0) {
-                [...replies].map(reply => {
-                    attachEl(reply);
-                });
-            }
-            if (!content) {
-                return;
-            }
-            if (content.innerHTML.includes('【啵啵_')) {
-                let innerHTML = content.innerHTML;
-                for (let item in chn_emote_dict) {
-                    innerHTML = innerHTML.replace(new RegExp(item,"gm"), chn_emote_dict[item]);
-                }
-                content.innerHTML = innerHTML;
-            }
-        }
-
-        function observeCommentList(commentList) {
-            // Directly attach elements for pure static server side rendered comments
-            // and replies list. Used by zhuanlan posts with reply hash in URL.
-            // TODO: need a better solution
-
-            [...commentList.querySelectorAll('.list-item, .reply-item')].map(item => {
-                attachEl(item);
-            });
-
-            const observer = new MutationObserver((mutationsList, observer) => {
-
-                for (const mutation of mutationsList) {
-
-                    if (mutation.type === 'childList') {
-
-                        debug('observed mutations', [...mutation.addedNodes].length);
-
-                        [...mutation.addedNodes].map(item => {
-                            attachEl(item);
-
-                            // Check if the comment has replies
-                            // I check replies here to make sure I can disable subtree option for
-                            // MutationObserver to get better performance.
-                            let replies = item.querySelectorAll('.con .reply-box .reply-item');
-
-                            if (replies.length > 0) {
-                                observeComments(item)
-                                debug(item.dataset.id + ' has rendered reply(ies)', replies.length);
+    // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
+    // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
+    const jsonpMutation = new MutationObserver((mutationList, observer) => {
+        for (const mutation of mutationList) {
+            if (mutation.type === 'childList') {
+                if (mutation.addedNodes.length > 0) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.localName === 'script' && node.src.includes('//api.bilibili.com/x/v2/reply/main')) {
+                            const callbackName = node.src.match(/callback=(.*?)&/)[1];
+                            const originFunc = window[callbackName];
+                            window[callbackName] = (value) => {
+                                for (let i in value.data.replies) {
+                                    injectReplyItem(value.data.replies[i]);
+                                }
+                                originFunc(value);
                             }
-                        })
+                        }
                     }
                 }
-            });
-            observer.observe(commentList, { attributes: false, childList: true, subtree: false });
-        }
-
-        function observeComments(wrapper) {
-            // .comment-list - general list for video, zhuanlan, and dongtai
-            // .reply-box - replies attached to specific comment
-            let commentLists = wrapper ? wrapper.querySelectorAll('.comment-list, .reply-box') : document.querySelectorAll('.comment-list, .reply-box, .reply-list');
-
-            if (commentLists) {
-                [...commentLists].map(observeCommentList);
             }
         }
-
-        // .bb-comment loads directly for zhuanlan post. So load it directly
-        observeComments();
-
-        // .bb-comment loads dynamcially for dontai and videos. So observe it first
-        const wrapperObserver = new MutationObserver((mutationsList, observer) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-
-                    [...mutation.addedNodes].map(item => {
-                        debug('mutation wrapper added', item);
-
-                        if (item.classList?.contains('bb-comment')) {
-                            debug('mutation wrapper added (found target)', item);
-                            observeComments(item);
-
-                            // Stop observing
-                            // TODO: when observer stops it won't work for dynamic homepage ie. https://space.bilibili.com/703007996/dynamic
-                            // so disable it here. This may have some performance impact on low-end machines.
-                            // wrapperObserver.disconnect();
-                        }
-                        if (item.classList?.contains('reply-item')) {
-                            attachEl(item);
-                        }
-                    })
-                }
-            }
-        });
-        wrapperObserver.observe(document.body, { attributes: false, childList: true, subtree: true });
-
-    }, false);
-
+    });
+    jsonpMutation.observe(window.document.head, { childList: true, subtree: true });
  })();
