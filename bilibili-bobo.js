@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.2.1
+// @version      0.2.2
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -26,6 +26,7 @@
         [3333114, "大傻呗", "https://i0.hdslb.com/bfs/album/d60f6a9c5bc4a109a72aaa610525e3bae2e872bf.jpg"],
         [3333115, "你说谁", "https://i0.hdslb.com/bfs/album/58ac841450aa4da91f596f50cceb1fc893f5e16a.jpg"],
         [3333116, "你说谁唐", "https://i0.hdslb.com/bfs/album/51e6222e60a5c53fffa7259a6d1e26593791ee6f.jpg"],
+        [3333117, "别急", "https://i0.hdslb.com/bfs/new_dyn/c1aa8cd73f9857e5545d38c1c98355f85858138.png"],
 
         // 来自 @爱茉-Merry-
         // https://t.bilibili.com/677805689726304279
@@ -74,7 +75,7 @@
 
         // 来自 @馒头卡今天吃什么
         // https://t.bilibili.com/667973375719636996
-        [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/album/e02a273e3a8a9f3d3f38a3f0d52810dfecf701ce.png"],
+        [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/37f5e9021dfdc7b7ed20cd4aac7a260b35645362.png"],
 
         // 来自 @四等双足多用途北极熊
         // https://t.bilibili.com/677933357627080774
@@ -82,6 +83,10 @@
         [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
         [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/be42907be36256ab4b28b3eff72dcf965083548.png"],
         [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/f78a61710285156baae135811721bda95083548.png"],
+
+        // 来自 @啵啵XXXIX
+        // https://t.bilibili.com/678369275334885380
+        [3333811, "天才上手", "https://i0.hdslb.com/bfs/album/9792ac4abc71af21b31f0c52976cff6a0da1040c.jpg"],
 
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
@@ -134,7 +139,7 @@
     }
     let bobo = {
         "id": 3333,
-        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊)",
+        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊, @啵啵XXXIX)",
         "url": "https://i0.hdslb.com/bfs/new_dyn/3e1656dd6dd1255f65fb91389dd73f775858138.png",
         "mtime": 1654321000,
         "type": 3,
@@ -153,37 +158,70 @@
 
     let emote_dict = {}
     let chn_emote_dict = {}
+    let reply_emote_dict = {}
     emote_source.forEach(function (arr){
         emote_dict["[啵啵_" + arr[1] + "]"] = arr[2];
-        chn_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", getReplyEmote(arr)];
+        chn_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", arr[2]];
+        reply_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", getReplyEmote(arr)];
     });
 
     let injectDynamicItem = function(item) {
-        if (item && "modules" in item && "module_dynamic" in item.modules && "desc" in item.modules.module_dynamic && item.modules.module_dynamic.desc && "rich_text_nodes" in item.modules.module_dynamic.desc) {
-            for(let node of item.modules.module_dynamic.desc.rich_text_nodes) {
-                if (node.text in emote_dict) {
-                    node.type = 'RICH_TEXT_NODE_TYPE_EMOJI'
-                    node.emoji = {
-                        "icon_url": emote_dict[node.text],
+        let nodes = item?.modules?.module_dynamic?.desc?.rich_text_nodes;
+        if (nodes) {
+            for (let i = 0; i < nodes.length; i++) {
+                // 处理【】的问题
+                if (nodes[i].text.includes('【')) {
+                    let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
+                    nodes.splice(i,1)
+                    for (let idx in splitResult) {
+                         if (splitResult[idx] in chn_emote_dict) {
+                             let replace = chn_emote_dict[splitResult[idx]];
+                             let node = {
+                                 "orig_text": replace[0],
+                                 "text": replace[0],
+                                 "type": "RICH_TEXT_NODE_TYPE_EMOJI",
+                                 "emoji": {
+                                     "icon_url": replace[1],
+                                     "size": 2,
+                                     "text": replace[0],
+                                     "type": 3
+                                 }
+                             }
+                             nodes.splice(i,0,node);
+                             i++;
+                         } else {
+                             let node = {
+                                 "orig_text": splitResult[idx],
+                                 "text": splitResult[idx],
+                                 "type": "RICH_TEXT_NODE_TYPE_TEXT"
+                             }
+                             nodes.splice(i,0,node);
+                             i++;
+                         }
+                    }
+                } else if (nodes[i].text in emote_dict) {
+                    nodes[i].type = 'RICH_TEXT_NODE_TYPE_EMOJI'
+                    nodes[i].emoji = {
+                        "icon_url": emote_dict[nodes[i].text],
                         "size": 2,
-                        "text": node.text,
+                        "text": nodes[i].text,
                         "type": 3
                     }
                 }
             }
         }
-        if (item && "orig" in item && item.orig) {
+        if (item?.orig) {
             injectDynamicItem(item.orig);
         }
     }
     let injectReplyItem = function(item) {
-        if (item.content.message.includes('【')) {
+        if (item?.content?.message?.includes('【')) {
             if (!('emote' in item.content)) {
                 item.content.emote = {};
             }
-            for (let emote_name in chn_emote_dict) {
+            for (let emote_name in reply_emote_dict) {
                 if (item.content.message.includes(emote_name)) {
-                    let replace = chn_emote_dict[emote_name];
+                    let replace = reply_emote_dict[emote_name];
                     item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), replace[0]);
                     item.content.emote[replace[0]] = replace[1];
                 }
