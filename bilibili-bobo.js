@@ -225,6 +225,13 @@
                 }
             }
             response.text = JSON.stringify(response_json);
+        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/main')) {
+            // 手机网页用的是XHR...
+            let response_json = JSON.parse(response.text);
+            for (let i in response_json.data.replies) {
+                injectReplyItem(response_json.data.replies[i]);
+            }
+            response.text = JSON.stringify(response_json);
         }
     });
 
