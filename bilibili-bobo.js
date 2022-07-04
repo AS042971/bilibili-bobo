@@ -222,6 +222,8 @@
         }
     }
     let injectReplyItem = function(item) {
+        if (!item) return;
+
         if (item?.content?.message?.includes('【')) {
             if (!('emote' in item.content)) {
                 item.content.emote = {};
@@ -234,7 +236,7 @@
                 }
             }
         }
-        if ('replies' in item) {
+        if ('replies' in item && item.replies) {
             for (let idx in item.replies) {
                 injectReplyItem(item.replies[idx]);
             }
