@@ -26,7 +26,7 @@
         [3333114, "大傻呗", "https://i0.hdslb.com/bfs/album/d60f6a9c5bc4a109a72aaa610525e3bae2e872bf.jpg"],
         [3333115, "你说谁", "https://i0.hdslb.com/bfs/album/58ac841450aa4da91f596f50cceb1fc893f5e16a.jpg"],
         [3333116, "你说谁唐", "https://i0.hdslb.com/bfs/album/51e6222e60a5c53fffa7259a6d1e26593791ee6f.jpg"],
-        [3333117, "别急", "https://i0.hdslb.com/bfs/new_dyn/c1aa8cd73f9857e5545d38c1c98355f85858138.png"],
+        [3333117, "别急2", "https://i0.hdslb.com/bfs/new_dyn/c1aa8cd73f9857e5545d38c1c98355f85858138.png"],
 
         // 来自 @爱茉-Merry-
         // https://t.bilibili.com/677805689726304279
