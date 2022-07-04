@@ -253,7 +253,7 @@
         } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
             // 动态详情页
             let response_json = JSON.parse(response.text);
-            injectDynamicItem(response_json.data.item);
+            injectDynamicItem(response_json?.data?.item);
             response.text = JSON.stringify(response_json);
         } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
             // 主时间线和个人主页
