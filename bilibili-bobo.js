@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.2.0
+// @version      0.2.4
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @match        https://*.bilibili.com/*
@@ -26,6 +26,7 @@
         [3333114, "大傻呗", "https://i0.hdslb.com/bfs/album/d60f6a9c5bc4a109a72aaa610525e3bae2e872bf.jpg"],
         [3333115, "你说谁", "https://i0.hdslb.com/bfs/album/58ac841450aa4da91f596f50cceb1fc893f5e16a.jpg"],
         [3333116, "你说谁唐", "https://i0.hdslb.com/bfs/album/51e6222e60a5c53fffa7259a6d1e26593791ee6f.jpg"],
+        [3333117, "别急2", "https://i0.hdslb.com/bfs/new_dyn/c1aa8cd73f9857e5545d38c1c98355f85858138.png"],
 
         // 来自 @爱茉-Merry-
         // https://t.bilibili.com/677805689726304279
@@ -68,20 +69,31 @@
         [3333433, "要哭了", "https://i0.hdslb.com/bfs/album/90b5b2d1c3c99056a1b12cc4f885b027ac405a40.jpg"],
         [3333434, "微笑", "https://i0.hdslb.com/bfs/album/5a9b5cde55216d1a2028b47c64f72403f8bf39c6.jpg"],
 
+        // 来自 @玉桂狗美图分享bot
+        // https://t.bilibili.com/678266565489066008
+        [3333441, "31", "https://i0.hdslb.com/bfs/new_dyn/1da0233090730f5212a36a86014ad1fe28020311.png"],
+        [3333442, "呜呜", "https://i0.hdslb.com/bfs/new_dyn/8eefe811b1f4f06c6e6186d0f1c5816628020311.png"],
+        [3333443, "耶", "https://i0.hdslb.com/bfs/new_dyn/026d0db9739486319b527353695e94ed28020311.png"],
+        [3333444, "害羞", "https://i0.hdslb.com/bfs/new_dyn/7c4e948b0bb51f3495db4562935391dd28020311.png"],
+
         // 来自 @原来是小瘪终极
         // https://t.bilibili.com/677009063564804096
         [3333511, "飞！", "https://i0.hdslb.com/bfs/album/232079a3a2135966a4182aacc6744dbee9a3454d.jpg"],
 
         // 来自 @馒头卡今天吃什么
         // https://t.bilibili.com/667973375719636996
-        [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/album/e02a273e3a8a9f3d3f38a3f0d52810dfecf701ce.png"],
+        [3333611, "啵叽王子", "https://i0.hdslb.com/bfs/new_dyn/37f5e9021dfdc7b7ed20cd4aac7a260b35645362.png"],
 
         // 来自 @四等双足多用途北极熊
         // https://t.bilibili.com/677933357627080774
-        [3333711, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/6cafd16007441caac580e763f9bec6625083548.png"],
-        [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/d0acdc3eb0744b6795c2f265eeae82c45083548.png"],
-        [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/be42907be36256ab4b28b3eff72dcf965083548.png"],
-        [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/f78a61710285156baae135811721bda95083548.png"],
+        [3333711, "玉米肠", "https://i0.hdslb.com/bfs/new_dyn/652bd99b8073860cb21b5b111672003f1648242323.png"],
+        [3333712, "哇库哇库", "https://i0.hdslb.com/bfs/new_dyn/a81c1ac0892b4d383758ef6e0d8dac821648242323.png"],
+        [3333713, "可爱捏", "https://i0.hdslb.com/bfs/new_dyn/8be8ac2255438b617cbd6525c87382521648242323.png"],
+        [3333714, "哭哭2", "https://i0.hdslb.com/bfs/new_dyn/5c85e9782af7ccdbd8541835830189b91648242323.png"],
+
+        // 来自 @啵啵XXXIX
+        // https://t.bilibili.com/678369275334885380
+        [3333811, "天才上手", "https://i0.hdslb.com/bfs/album/9792ac4abc71af21b31f0c52976cff6a0da1040c.jpg"],
 
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/668646710612852743
@@ -93,13 +105,6 @@
         [3333292, "桂物啵啵", "https://i0.hdslb.com/bfs/album/29d7a0b905556fe5a365e4b62a15024ccf4654ee.png"],
         [3333293, "桂物抱抱", "https://i0.hdslb.com/bfs/album/187fbc36bbf5efb168932a5591a120cdb840dd1d.png"],
     ]
-
-    let emote_dict = {}
-    let chn_emote_dict = {}
-    emote_source.forEach(function (arr){
-        emote_dict["[啵啵_" + arr[1] + "]"] = arr[2];
-        chn_emote_dict["【啵啵_" + arr[1] + "】"] = '<img src="' + arr[2] + '" alt="[啵啵_' + arr[1] + ']">';
-    });
 
     let getEmote = function(arr) {
         return {
@@ -123,9 +128,25 @@
                 "activity": null
             }
     }
+    let getReplyEmote = function(arr) {
+        return {
+            "id": arr[0],
+            "package_id": 3333,
+            "state": 0,
+            "type": 3,
+            "attr": 0,
+            "text": "[啵啵_" + arr[1] + "]",
+            "url": arr[2],
+            "meta": {
+                "size": 2
+            },
+            "mtime": 1654321000,
+            "jump_title": arr[1]
+        }
+    }
     let bobo = {
         "id": 3333,
-        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊)",
+        "text": "啵啵 (来自 @风罗4个圈儿, @爱茉-Merry-, @卡古拉的醋昆布e, @玉桂狗美图分享bot, @原来是小瘪终极, @馒头卡今天吃什么, @四等双足多用途北极熊, @啵啵XXXIX)",
         "url": "https://i0.hdslb.com/bfs/new_dyn/3e1656dd6dd1255f65fb91389dd73f775858138.png",
         "mtime": 1654321000,
         "type": 3,
@@ -142,22 +163,83 @@
         }
     }
 
+    let emote_dict = {}
+    let chn_emote_dict = {}
+    let reply_emote_dict = {}
+    emote_source.forEach(function (arr){
+        emote_dict["[啵啵_" + arr[1] + "]"] = arr[2];
+        chn_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", arr[2]];
+        reply_emote_dict["【啵啵_" + arr[1] + "】"] = ["[啵啵_" + arr[1] + "]", getReplyEmote(arr)];
+    });
+
     let injectDynamicItem = function(item) {
-        if (item && "modules" in item && "module_dynamic" in item.modules && "desc" in item.modules.module_dynamic && item.modules.module_dynamic.desc && "rich_text_nodes" in item.modules.module_dynamic.desc) {
-            for(let node of item.modules.module_dynamic.desc.rich_text_nodes) {
-                if (node.text in emote_dict) {
-                    node.type = 'RICH_TEXT_NODE_TYPE_EMOJI'
-                    node.emoji = {
-                        "icon_url": emote_dict[node.text],
+        let nodes = item?.modules?.module_dynamic?.desc?.rich_text_nodes;
+        if (nodes) {
+            for (let i = 0; i < nodes.length; i++) {
+                // 处理【】的问题
+                if (nodes[i].text.includes('【')) {
+                    let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
+                    nodes.splice(i,1)
+                    for (let idx in splitResult) {
+                         if (splitResult[idx] in chn_emote_dict) {
+                             let replace = chn_emote_dict[splitResult[idx]];
+                             let node = {
+                                 "orig_text": replace[0],
+                                 "text": replace[0],
+                                 "type": "RICH_TEXT_NODE_TYPE_EMOJI",
+                                 "emoji": {
+                                     "icon_url": replace[1],
+                                     "size": 2,
+                                     "text": replace[0],
+                                     "type": 3
+                                 }
+                             }
+                             nodes.splice(i,0,node);
+                             i++;
+                         } else {
+                             let node = {
+                                 "orig_text": splitResult[idx],
+                                 "text": splitResult[idx],
+                                 "type": "RICH_TEXT_NODE_TYPE_TEXT"
+                             }
+                             nodes.splice(i,0,node);
+                             i++;
+                         }
+                    }
+                } else if (nodes[i].text in emote_dict) {
+                    nodes[i].type = 'RICH_TEXT_NODE_TYPE_EMOJI'
+                    nodes[i].emoji = {
+                        "icon_url": emote_dict[nodes[i].text],
                         "size": 2,
-                        "text": node.text,
+                        "text": nodes[i].text,
                         "type": 3
                     }
                 }
             }
         }
-        if (item && "orig" in item && item.orig) {
+        if (item?.orig) {
             injectDynamicItem(item.orig);
+        }
+    }
+    let injectReplyItem = function(item) {
+        if (!item) return;
+
+        if (item?.content?.message?.includes('【')) {
+            if (!('emote' in item.content)) {
+                item.content.emote = {};
+            }
+            for (let emote_name in reply_emote_dict) {
+                if (item.content.message.includes(emote_name)) {
+                    let replace = reply_emote_dict[emote_name];
+                    item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), " "+replace[0]);
+                    item.content.emote[replace[0]] = replace[1];
+                }
+            }
+        }
+        if ('replies' in item && item.replies) {
+            for (let idx in item.replies) {
+                injectReplyItem(item.replies[idx]);
+            }
         }
     }
 
@@ -171,7 +253,7 @@
         } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
             // 动态详情页
             let response_json = JSON.parse(response.text);
-            injectDynamicItem(response_json.data.item);
+            injectDynamicItem(response_json?.data?.item);
             response.text = JSON.stringify(response_json);
         } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
             // 主时间线和个人主页
@@ -190,129 +272,64 @@
                 }
             }
             response.text = JSON.stringify(response_json);
+        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/main')) {
+            // 手机网页用的是XHR...
+            let response_json = JSON.parse(response.text);
+            if (response_json.data.top_replies) {
+                for (let i in response_json.data.top_replies) {
+                    injectReplyItem(response_json.data.top_replies[i]);
+                }
+            }
+            for (let i in response_json.data.replies) {
+                injectReplyItem(response_json.data.replies[i]);
+            }
+            response.text = JSON.stringify(response_json);
+        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
+            // 新增评论的 POST 接口，返回值中是处理过的评论内容
+            // 拦截这个就可以新增后立刻显示表情包
+            let response_json = JSON.parse(response.text);
+            injectReplyItem(response_json.data.reply);
+            response.text = JSON.stringify(response_json);
         }
     });
 
-    // 评论区通过修改网页完成（感谢 @Sparanoid）
-    window.addEventListener('load', () => {
-        const DEBUG = false;
-        const NAMESPACE = 'bilibili-bobo-emoji';
+    // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
+    // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
+    const jsonpMutation = new MutationObserver((mutationList, observer) => {
+        for (const mutation of mutationList) {
+            if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
 
-        console.log(`${NAMESPACE} loaded`);
-        function debug(description = '', msg = '', force = false) {
-            if (DEBUG || force) {
-                console.log(`${NAMESPACE}: ${description}`, msg)
-            }
-        }
+            for (const node of mutation.addedNodes) {
+                if (node.localName !== 'script') continue;
+            
+                const src = node.src;
+                if (src.includes('//api.bilibili.com')) {
+                    const callbackName = src.match(/callback=(.*?)&/)[1];
+                    const originFunc = window[callbackName];
 
-        function attachEl(item) {
-
-            let injectWrap = item.querySelector('.info');
-            // .text - comment content
-            // .text-con - reply content
-            let content = item.querySelector('.con .text') || item.querySelector('.reply-con .text-con') || injectWrap?.querySelector('.content') || item.querySelector('.content');
-            let id = item.dataset.id;
-            let avID = window.aid;
-
-            // Simple way to attach element on replies initially loaded with comment
-            // which wouldn't trigger mutation inside observeComments
-            let replies = item.querySelectorAll('.con .reply-box .reply-item')
-            if (replies.length == 0) {
-                replies = item.querySelectorAll('.sub-preview-item');
-            }
-
-            if (replies.length > 0) {
-                [...replies].map(reply => {
-                    attachEl(reply);
-                });
-            }
-            if (!content) {
-                return;
-            }
-            if (content.innerHTML.includes('【啵啵_')) {
-                let innerHTML = content.innerHTML;
-                for (let item in chn_emote_dict) {
-                    innerHTML = innerHTML.replace(new RegExp(item,"gm"), chn_emote_dict[item]);
-                }
-                content.innerHTML = innerHTML;
-            }
-        }
-
-        function observeCommentList(commentList) {
-            // Directly attach elements for pure static server side rendered comments
-            // and replies list. Used by zhuanlan posts with reply hash in URL.
-            // TODO: need a better solution
-
-            [...commentList.querySelectorAll('.list-item, .reply-item')].map(item => {
-                attachEl(item);
-            });
-
-            const observer = new MutationObserver((mutationsList, observer) => {
-
-                for (const mutation of mutationsList) {
-
-                    if (mutation.type === 'childList') {
-
-                        debug('observed mutations', [...mutation.addedNodes].length);
-
-                        [...mutation.addedNodes].map(item => {
-                            attachEl(item);
-
-                            // Check if the comment has replies
-                            // I check replies here to make sure I can disable subtree option for
-                            // MutationObserver to get better performance.
-                            let replies = item.querySelectorAll('.con .reply-box .reply-item');
-
-                            if (replies.length > 0) {
-                                observeComments(item)
-                                debug(item.dataset.id + ' has rendered reply(ies)', replies.length);
+                    window[callbackName] = (value) => {
+                        if (src.includes('//api.bilibili.com/x/v2/reply')) {
+                            for (let i in value.data.replies) {
+                                injectReplyItem(value.data.replies[i]);
                             }
-                        })
+                            if (value.data.top_replies) {
+                                for (let i in value.data.top_replies) {
+                                    injectReplyItem(value.data.top_replies[i]);
+                                }
+                            }
+                            if (value.data.top) {
+                                injectReplyItem(value.data.top.upper);
+                            }
+                            if (value.data.upper) {
+                                injectReplyItem(value.data.upper.top);
+                            }
+                        }
+                        
+                        originFunc(value);
                     }
                 }
-            });
-            observer.observe(commentList, { attributes: false, childList: true, subtree: false });
-        }
-
-        function observeComments(wrapper) {
-            // .comment-list - general list for video, zhuanlan, and dongtai
-            // .reply-box - replies attached to specific comment
-            let commentLists = wrapper ? wrapper.querySelectorAll('.comment-list, .reply-box') : document.querySelectorAll('.comment-list, .reply-box, .reply-list');
-
-            if (commentLists) {
-                [...commentLists].map(observeCommentList);
             }
         }
-
-        // .bb-comment loads directly for zhuanlan post. So load it directly
-        observeComments();
-
-        // .bb-comment loads dynamcially for dontai and videos. So observe it first
-        const wrapperObserver = new MutationObserver((mutationsList, observer) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-
-                    [...mutation.addedNodes].map(item => {
-                        debug('mutation wrapper added', item);
-
-                        if (item.classList?.contains('bb-comment')) {
-                            debug('mutation wrapper added (found target)', item);
-                            observeComments(item);
-
-                            // Stop observing
-                            // TODO: when observer stops it won't work for dynamic homepage ie. https://space.bilibili.com/703007996/dynamic
-                            // so disable it here. This may have some performance impact on low-end machines.
-                            // wrapperObserver.disconnect();
-                        }
-                        if (item.classList?.contains('reply-item')) {
-                            attachEl(item);
-                        }
-                    })
-                }
-            }
-        });
-        wrapperObserver.observe(document.body, { attributes: false, childList: true, subtree: true });
-
-    }, false);
-
+    });
+    jsonpMutation.observe(window.document.head, { childList: true, subtree: true });
  })();
