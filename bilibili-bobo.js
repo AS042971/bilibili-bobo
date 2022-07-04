@@ -282,6 +282,12 @@
                 injectReplyItem(response_json.data.replies[i]);
             }
             response.text = JSON.stringify(response_json);
+        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
+            // 新增评论的 POST 接口，返回值中是处理过的评论内容
+            // 拦截这个就可以新增后立刻显示表情包
+            let response_json = JSON.parse(response.text);
+            injectReplyItem(response_json.data.reply);
+            response.text = JSON.stringify(response_json);
         }
     });
 
