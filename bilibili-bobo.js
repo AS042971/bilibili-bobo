@@ -295,24 +295,35 @@
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
     const jsonpMutation = new MutationObserver((mutationList, observer) => {
         for (const mutation of mutationList) {
-            if (mutation.type === 'childList') {
-                if (mutation.addedNodes.length > 0) {
-                    for (const node of mutation.addedNodes) {
-                        if (node.localName === 'script' && node.src.includes('//api.bilibili.com/x/v2/reply/main')) {
-                            const callbackName = node.src.match(/callback=(.*?)&/)[1];
-                            const originFunc = window[callbackName];
-                            window[callbackName] = (value) => {
-                                if (value.data.top_replies) {
-                                    for (let i in value.data.top_replies) {
-                                        injectReplyItem(value.data.top_replies[i]);
-                                    }
+            if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+
+            for (const node of mutation.addedNodes) {
+                if (node.localName !== 'script') continue;
+            
+                const src = node.src;
+                if (src.includes('//api.bilibili.com')) {
+                    const callbackName = src.match(/callback=(.*?)&/)[1];
+                    const originFunc = window[callbackName];
+
+                    window[callbackName] = (value) => {
+                        if (src.includes('//api.bilibili.com/x/v2/reply')) {
+                            for (let i in value.data.replies) {
+                                injectReplyItem(value.data.replies[i]);
+                            }
+                            if (value.data.top_replies) {
+                                for (let i in value.data.top_replies) {
+                                    injectReplyItem(value.data.top_replies[i]);
                                 }
-                                for (let i in value.data.replies) {
-                                    injectReplyItem(value.data.replies[i]);
-                                }
-                                originFunc(value);
+                            }
+                            if (value.data.top) {
+                                injectReplyItem(value.data.top.upper);
+                            }
+                            if (value.data.upper) {
+                                injectReplyItem(value.data.upper.top);
                             }
                         }
+                        
+                        originFunc(value);
                     }
                 }
             }
