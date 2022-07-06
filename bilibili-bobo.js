@@ -9,13 +9,32 @@
 // @match        https://*.bilibili.com/*
 // @exclude      https://live.bilibili.com/*
 // @icon         https://experiments.sparanoid.net/favicons/v2/www.bilibili.com.ico
-// @require      https://unpkg.com/xhook@1.4.9/dist/xhook.min.js
 // @run-at       document-start
-// @grant        none
+// @grant        unsafeWindow
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 
 (function() {
     'use strict';
+    // 使用沙盒模式只能自己穿透注入xhook，否则xhook无法初始化
+    let xhookLoad = new Promise(resolve => {
+        if (!unsafeWindow.xhook) {
+            const xhookScriptEl = unsafeWindow.document.createElement('script');
+            xhookScriptEl.type = 'text/javascript';
+            xhookScriptEl.src = 'https://unpkg.com/xhook@1.4.9/dist/xhook.min.js';
+
+            // script 标签加载完成后添加钩子
+            xhookScriptEl.onload = () => {
+                resolve();
+            }
+            unsafeWindow.document.head.appendChild(xhookScriptEl);
+        } else {
+            // 如果其他插件注入了脚本就不用自己插入了
+            resolve();
+        }
+    });
+
     let emote_source = [
         // 来自 @风罗4个圈儿
         // https://t.bilibili.com/676767798070870018
@@ -243,55 +262,58 @@
         }
     }
 
-    // 动态直接通过 Hook XHR 响应完成
-    xhook.after(function(request, response) {
-        if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
-            // 表情包面板
-            let response_json = JSON.parse(response.text);
-            response_json.data.packages.push(bobo);
-            response.text = JSON.stringify(response_json);
-        } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
-            // 动态详情页
-            let response_json = JSON.parse(response.text);
-            injectDynamicItem(response_json?.data?.item);
-            response.text = JSON.stringify(response_json);
-        } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
-            // 主时间线和个人主页
-            let response_json = JSON.parse(response.text);
-            for (let i in response_json.data.items) {
-                injectDynamicItem(response_json.data.items[i]);
-            }
-            response.text = JSON.stringify(response_json);
-        } else if (request.url.includes('//app.bilibili.com/x/topic/web/details/cards')) {
-            // 话题页
-            let response_json = JSON.parse(response.text);
-            for (let i in response_json.data.topic_card_list.items) {
-                let item = response_json.data.topic_card_list.items[i]
-                if (item.topic_type == 'DYNAMIC') {
-                    injectDynamicItem(item.dynamic_card_item);
+    xhookLoad.then(() => {
+        // 动态直接通过 Hook XHR 响应完成
+        xhook.after(function(request, response) {
+            if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
+                // 表情包面板
+                let response_json = JSON.parse(response.text);
+                response_json.data.packages.push(bobo);
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
+                // 动态详情页
+                let response_json = JSON.parse(response.text);
+                injectDynamicItem(response_json?.data?.item);
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
+                // 主时间线和个人主页
+                let response_json = JSON.parse(response.text);
+                for (let i in response_json.data.items) {
+                    injectDynamicItem(response_json.data.items[i]);
                 }
-            }
-            response.text = JSON.stringify(response_json);
-        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/main')) {
-            // 手机网页用的是XHR...
-            let response_json = JSON.parse(response.text);
-            if (response_json.data.top_replies) {
-                for (let i in response_json.data.top_replies) {
-                    injectReplyItem(response_json.data.top_replies[i]);
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//app.bilibili.com/x/topic/web/details/cards')) {
+                // 话题页
+                let response_json = JSON.parse(response.text);
+                for (let i in response_json.data.topic_card_list.items) {
+                    let item = response_json.data.topic_card_list.items[i]
+                    if (item.topic_type == 'DYNAMIC') {
+                        injectDynamicItem(item.dynamic_card_item);
+                    }
                 }
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//api.bilibili.com/x/v2/reply/main')) {
+                // 手机网页用的是XHR...
+                let response_json = JSON.parse(response.text);
+                if (response_json.data.top_replies) {
+                    for (let i in response_json.data.top_replies) {
+                        injectReplyItem(response_json.data.top_replies[i]);
+                    }
+                }
+                for (let i in response_json.data.replies) {
+                    injectReplyItem(response_json.data.replies[i]);
+                }
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
+                // 新增评论的 POST 接口，返回值中是处理过的评论内容
+                // 拦截这个就可以新增后立刻显示表情包
+                let response_json = JSON.parse(response.text);
+                injectReplyItem(response_json.data.reply);
+                response.text = JSON.stringify(response_json);
             }
-            for (let i in response_json.data.replies) {
-                injectReplyItem(response_json.data.replies[i]);
-            }
-            response.text = JSON.stringify(response_json);
-        } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
-            // 新增评论的 POST 接口，返回值中是处理过的评论内容
-            // 拦截这个就可以新增后立刻显示表情包
-            let response_json = JSON.parse(response.text);
-            injectReplyItem(response_json.data.reply);
-            response.text = JSON.stringify(response_json);
-        }
-    });
+        });
+    })
+
 
     // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
@@ -304,10 +326,13 @@
             
                 const src = node.src;
                 if (src.includes('//api.bilibili.com')) {
-                    const callbackName = src.match(/callback=(.*?)&/)[1];
-                    const originFunc = window[callbackName];
+                    const matchResult = src.match(/callback=(.*?)&/);
+                    console.log(src, matchResult);
+                    if (!matchResult) return;
+                    const callbackName = smatchResult[1];
+                    const originFunc = unsafeWindow[callbackName];
 
-                    window[callbackName] = (value) => {
+                    unsafeWindow[callbackName] = (value) => {
                         if (src.includes('//api.bilibili.com/x/v2/reply')) {
                             for (let i in value.data.replies) {
                                 injectReplyItem(value.data.replies[i]);
@@ -331,5 +356,5 @@
             }
         }
     });
-    jsonpMutation.observe(window.document.head, { childList: true, subtree: true });
+    jsonpMutation.observe(unsafeWindow.document.head, { childList: true, subtree: true });
  })();
