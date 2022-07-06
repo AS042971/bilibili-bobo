@@ -329,7 +329,7 @@
                     const matchResult = src.match(/callback=(.*?)&/);
                     console.log(src, matchResult);
                     if (!matchResult) return;
-                    const callbackName = smatchResult[1];
+                    const callbackName = matchResult[1];
                     const originFunc = unsafeWindow[callbackName];
 
                     unsafeWindow[callbackName] = (value) => {
