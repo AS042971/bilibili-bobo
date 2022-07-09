@@ -59,21 +59,6 @@
         });
     };
 
-    let urls = [
-        // 啵啵
-        "https://raw.githubusercontent.com/AS042971/bili-emotes/main/%E5%95%B5%E5%95%B5.json",
-        // 约战狂三
-        "https://api.bilibili.com/x/emote/package?business=reply&ids=123"
-    ];
-    let resolved_emote_packs = [];
-    for (let i in urls) {
-        let packs = await resolveEmoteURL(urls[i]);
-        resolved_emote_packs = resolved_emote_packs.concat(packs);
-    }
-    console.log(resolved_emote_packs);
-
-    let emote_dict = {}
-    let chn_emote_dict = {}
     let getReplyItem = function(resolved_emote) {
         return {
             "id": resolved_emote.id,
@@ -90,15 +75,99 @@
             "jump_title": resolved_emote.meta.alias
         }
     }
-    resolved_emote_packs.forEach(function (pack) {
-        pack.emote.forEach(function(emote) {
-            let key = emote.text;
-            let chn_key = key.replace('[','【').replace(']','】');
-            let reply_item = getReplyItem(emote);
-            emote_dict[key] = reply_item;
-            chn_emote_dict[chn_key] = reply_item;
-        })
+
+    // 页面加载完成后
+    unsafeWindow.addEventListener('load', () => {
+        // 在动态页面增加设置按钮，用来更新点赞者列表
+        if (location.hostname === 't.bilibili.com') {
+            let boboListUpdating = false;
+            const settingBtnEl = unsafeWindow.document.createElement("div");
+            settingBtnEl.innerHTML = `
+          <div
+            style="
+              width: 50px;
+              height: 50px;
+              border-radius:10px;
+              position:fixed;
+              bottom: 30px;
+              left: 100px;
+              border: 1px #000 solid;
+              z-index: 9999;
+              background-image: url(https://i0.hdslb.com/bfs/face/6bd8870432b9c0fffc755bf29de03856df6d9efe.jpg);
+              background-size: 100% 100%;"
+            id="bobo-emotes-settings-btn"
+          >
+          </div>
+      `;
+
+            function createWrapper() {
+                const wrapperEl = document.createElement('div');
+                wrapperEl.setAttribute('id', 'bobo-emotes-settings-dialog-wrapper');
+                wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
+                wrapperEl.innerHTML = `
+            <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
+              <button id="bobo-emotes-update-likes">更新订阅的表情</button>
+              <div id="bobo-emotes-update-text"></div>
+              <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%"></textarea>
+              <button id="bobo-emotes-setting-cancel" style="float: right;">退出设置</button>
+            </div>
+        `;
+                unsafeWindow.document.body.appendChild(wrapperEl);
+                let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
+                let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
+                updateBtn.addEventListener('click', async () => {
+                    boboListUpdating = true;
+                    const el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
+                    el.innerText = '正在刷新订阅，请稍等…';
+                    const urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
+                    let urls = urlBox.value.split(/\n+/);
+                    urls.push("https://raw.githubusercontent.com/AS042971/bili-emotes/main/%E5%95%B5%E5%95%B5.json");
+                    let resolved_emote_packs = [];
+                    for (let i in urls) {
+                        if (urls[i]) {
+                            let packs = await resolveEmoteURL(urls[i]);
+                            resolved_emote_packs = resolved_emote_packs.concat(packs);
+                        }
+                    }
+                    let emote_dict = {}
+                    let chn_emote_dict = {}
+                    resolved_emote_packs.forEach(function (pack) {
+                        pack.emote.forEach(function(emote) {
+                            let key = emote.text;
+                            let chn_key = key.replace('[','【').replace(']','】');
+                            let reply_item = getReplyItem(emote);
+                            emote_dict[key] = reply_item;
+                            chn_emote_dict[chn_key] = reply_item;
+                        })
+                    });
+                    GM_setValue('resolved_emote_packs', resolved_emote_packs);
+                    GM_setValue('emote_dict', emote_dict);
+                    GM_setValue('chn_emote_dict', chn_emote_dict);
+                    el.innerText = '更新订阅成功，请刷新网页后使用！';
+                    boboListUpdating = false;
+                });
+                unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
+                    if (boboListUpdating) {
+                        alert('正在更新中，请勿退出，关闭页面会导致更新失败');
+                        return;
+                    }
+                    wrapperEl.remove();
+                });
+            }
+
+            unsafeWindow.document.body.appendChild(settingBtnEl);
+
+            settingBtnEl.addEventListener('click', () => {
+                createWrapper(settingBtnEl);
+            });
+        }
     });
+
+    // 读取缓存
+    const resolved_emote_packs = GM_getValue('resolved_emote_packs') ?? []
+    const emote_dict = GM_getValue('emote_dict') ?? {}
+    const chn_emote_dict = GM_getValue('chn_emote_dict') ?? []
+
 
     let injectDynamicItem = function(item) {
         let nodes = item?.modules?.module_dynamic?.desc?.rich_text_nodes;
