@@ -416,16 +416,19 @@
                     for (let i in response_json.data.top_replies) {
                         injectReplyItem(response_json.data.top_replies[i], chn_emote_dict);
                     }
+                    modifyUserSailing(response_json.data.top_replies, likers);
                 }
                 for (let i in response_json.data.replies) {
                     injectReplyItem(response_json.data.replies[i], chn_emote_dict);
                 }
+                modifyUserSailing(response_json.data.replies, likers);
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
                 // 新增评论的 POST 接口，返回值中是处理过的评论内容
                 // 拦截这个就可以新增后立刻显示表情包
                 let response_json = JSON.parse(response.text);
                 injectReplyItem(response_json.data.reply, chn_emote_dict);
+                modifyUserSailing([response_json.data.reply], likers);
                 response.text = JSON.stringify(response_json);
             }
         });
