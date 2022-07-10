@@ -186,7 +186,7 @@
         if (nodes) {
             for (let i = 0; i < nodes.length; i++) {
                 // 处理【】的问题
-                if (nodes[i].text.includes('【')) {
+                if (nodes[i]?.text && nodes[i].text.includes('【')) {
                     let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
                     nodes.splice(i,1)
                     for (let idx in splitResult) {

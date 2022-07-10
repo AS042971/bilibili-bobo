@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.0
+ // @version      0.3.0
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -254,7 +254,7 @@
         if (nodes) {
             for (let i = 0; i < nodes.length; i++) {
                 // 处理【】的问题
-                if (nodes[i].text.includes('【')) {
+                if (nodes[i]?.text && nodes[i].text.includes('【')) {
                     let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
                     nodes.splice(i,1)
                     for (let idx in splitResult) {
