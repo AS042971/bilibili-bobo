@@ -79,10 +79,10 @@
         }
     }
     let refershEmote = async function(urls) {
-        urls.concat(defaultURLs);
+        urls = urls.concat(defaultURLs);
         let resolved_emote_packs = [];
         for (let i in urls) {
-            if (urls[i]) {
+            if (urls[i].trim()) {
                 let packs = await resolveEmoteURL(urls[i]);
                 resolved_emote_packs = resolved_emote_packs.concat(packs);
             }
@@ -111,23 +111,30 @@
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
-              <button id="bobo-emotes-update-likes">更新订阅的表情</button>
+              <div>附加表情：</div>
+              <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
-              <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%"></textarea>
+              <button id="bobo-emotes-update-likes">更新订阅</button>
               <button id="bobo-emotes-setting-cancel" style="float: right;">退出设置</button>
             </div>
         `;
         unsafeWindow.document.body.appendChild(wrapperEl);
         let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
+        let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
+        let emoteURLs = GM_getValue('emote_urls') ?? []
+        let lastUpdate = GM_getValue('last_update')
+        let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
+        urlBox.value = emoteURLs.join('\n');
+        el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
         updateBtn.addEventListener('click', async () => {
             boboListUpdating = true;
-            const el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
-            el.innerText = '正在刷新订阅，请稍等…';
-            const urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
+            el.innerText = '正在更新订阅，请稍等…';
             let urls = urlBox.value.split(/\n+/);
+            GM_setValue('emote_urls', urls);
             await refershEmote(urls);
             el.innerText = '更新订阅成功，请刷新网页后使用！';
+            GM_setValue('last_update', Date());
             boboListUpdating = false;
         });
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
@@ -266,14 +273,12 @@
     // 添加XHR钩子，用于增加表情包和注入动态
     xhookLoad.then(async () => {
         // 动态直接通过 Hook XHR 响应完成
-        if (!GM_getValue('resolved_emote_packs')) {
+        if (GM_getValue('resolved_emote_packs').length == 0) {
             await refershEmote([])
         }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs') ?? []
         const emote_dict = GM_getValue('emote_dict') ?? {}
         const chn_emote_dict = GM_getValue('chn_emote_dict') ?? {}
-
-        console.log("XHR", resolved_emote_packs, emote_dict, chn_emote_dict)
 
         unsafeWindow.xhook.after(function(request, response) {
             if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
@@ -328,7 +333,7 @@
     // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
     const jsonpMutation = new MutationObserver(async (mutationList, observer) => {
-        if (!GM_getValue('resolved_emote_packs')) {
+        if (GM_getValue('resolved_emote_packs').length == 0) {
             await refershEmote([])
         }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs') ?? []
