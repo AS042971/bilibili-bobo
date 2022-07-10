@@ -82,7 +82,7 @@
         urls = urls.concat(defaultURLs);
         let resolved_emote_packs = [];
         for (let i in urls) {
-            if (urls[i].trim()) {
+            if (urls.hasOwnProperty(i) && urls[i].trim()) {
                 let packs = await resolveEmoteURL(urls[i]);
                 resolved_emote_packs = resolved_emote_packs.concat(packs);
             }
@@ -103,14 +103,40 @@
         GM_setValue('chn_emote_dict', chn_emote_dict);
     }
 
+    let refershLikers = async function() {
+        const queryData = await new Promise(resolve => {
+            GM_xmlhttpRequest({
+                url: 'https://git.asf.ink/milkiq/bilibili-bobo-likers/raw/branch/master/likers.json',
+                method : "GET",
+                onload : function(data){
+                    try {
+                        let json = JSON.parse(data.responseText);
+                        resolve(json);
+                    } catch (error) {
+                        resolve([]);
+                    }
+                },
+                onerror : function(err) {
+                    resolve([]);
+                }
+            });
+        });
+        GM_setValue('bobo_liker_uids', queryData ?? []);
+    }
+
     // 表情配置面板
     let createEmotePanel = function() {
         let boboListUpdating = false;
+        let boboLikerUpdating = false;
         const wrapperEl = document.createElement('div');
         wrapperEl.setAttribute('id', 'bobo-emotes-settings-dialog-wrapper');
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
+              <div>啵啵卡片：</div><br/>
+              <button id="bobo-likers-update">更新啵版列表</button>
+              <div id="bobo-likers-update-text"></div>
+              <hr />
               <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
@@ -120,13 +146,17 @@
         `;
         unsafeWindow.document.body.appendChild(wrapperEl);
         let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
+        let updateLikerBtn = unsafeWindow.document.getElementById('bobo-likers-update');
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
         let emoteURLs = GM_getValue('emote_urls', [])
         let lastUpdate = GM_getValue('last_update', 0)
+        let lastLikersUpdate = GM_getValue('last_likers_update');
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
+        let likerText = unsafeWindow.document.getElementById('bobo-likers-update-text');
         urlBox.value = emoteURLs.join('\n');
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
+        likerText.innerText = '上次更新时间：' + ((lastLikersUpdate)? lastLikersUpdate : '从未更新');
         updateBtn.addEventListener('click', async () => {
             boboListUpdating = true;
             el.innerText = '正在更新订阅，请稍等…';
@@ -137,8 +167,16 @@
             GM_setValue('last_update', Date());
             boboListUpdating = false;
         });
+        updateLikerBtn.addEventListener('click', async () => {
+            boboLikerUpdating = true;
+            likerText.innerText = '正在更新数据，请稍等…';
+            await refershLikers();
+            likerText.innerText = '更新数据成功，请刷新网页后使用！';
+            GM_setValue('last_likers_update', Date());
+            boboLikerUpdating = false;
+        });
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
-            if (boboListUpdating) {
+            if (boboListUpdating || boboLikerUpdating) {
                 alert('正在更新中，请勿退出，关闭页面会导致更新失败');
                 return;
             }
@@ -180,8 +218,38 @@
         }
     }
 
+    function uidMatch(likers, uid) {
+        if (uid === 33605910) return true;
+        return likers.some(id => id === uid);
+    }
+
+    function getFansNumber(uid) {
+        return uid === 33605910 ? 1 : (uid + '').slice(-6);
+    }
+
     // 注入动态和评论
-    let injectDynamicItem = function(item, emote_dict, chn_emote_dict) {
+    let injectDynamicItem = function(item, emote_dict, chn_emote_dict, likers) {
+
+        if (likers) {
+            const uid = item?.modules?.module_author?.mid;
+            if (uidMatch(likers, uid)) {
+                const number = getFansNumber(uid);
+                item.modules.module_author.decorate = {
+                    "card_url": "https://i0.hdslb.com/bfs/new_dyn/a3c6601ddcf82030e4e3bd3ebf148e411320060365.png",
+                    "fan": {
+                        "color": "#ff7373",
+                        "is_fan": true,
+                        "num_str": number,
+                        "number": +number
+                    },
+                    "id": 33521,
+                    "jump_url": "https://space.bilibili.com/33605910",
+                    "name": "三三与她的小桂物",
+                    "type": 3
+                };
+            }
+        }
+
         let nodes = item?.modules?.module_dynamic?.desc?.rich_text_nodes;
         if (nodes) {
             for (let i = 0; i < nodes.length; i++) {
@@ -190,6 +258,7 @@
                     let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
                     nodes.splice(i,1)
                     for (let idx in splitResult) {
+                        if (!splitResult.hasOwnProperty(idx)) continue;
                         if (splitResult[idx] in chn_emote_dict) {
                             let replace = chn_emote_dict[splitResult[idx]];
                             let node = {
@@ -238,6 +307,7 @@
                 item.content.emote = {};
             }
             for (let emote_name in chn_emote_dict) {
+                if (!chn_emote_dict.hasOwnProperty(emote_name)) continue;
                 if (item.content.message.includes(emote_name)) {
                     let replace = chn_emote_dict[emote_name];
                     item.content.message = item.content.message.replace(new RegExp(emote_name,"gm"), " " + replace.text);
@@ -247,9 +317,34 @@
         }
         if ('replies' in item && item.replies) {
             for (let idx in item.replies) {
+                if (!item.replies.hasOwnProperty(idx)) continue;
                 injectReplyItem(item.replies[idx], chn_emote_dict);
             }
         }
+    }
+    let modifyUserSailing = function (replies, likers = []) {
+      replies = replies ?? [];
+      for (let i = 0; i < replies.length; i++) {
+        const memberData = replies[i]?.member;
+        if (!memberData) continue;
+        if (uidMatch(likers, +memberData.mid)){
+          const number = getFansNumber(+memberData.mid);
+          memberData.user_sailing.cardbg = {
+              "id": 33521,
+              "name": "三三与她的小桂物",
+              "image": "https://i0.hdslb.com/bfs/new_dyn/223325d6ff3c467a762eacd8cebad5bd1320060365.png",
+              "jump_url": "https://space.bilibili.com/33605910",
+              "fan": {
+                  "is_fan": 1,
+                  "number": number,
+                  "color": "#ff7373",
+                  "name": "三三与她的小桂物",
+                  "num_desc": number + ''
+              },
+              "type": "suit"
+          }
+        }
+      }
     }
 
     // 页面加载完成后添加表情配置面板按钮
@@ -280,6 +375,12 @@
         const emote_dict = GM_getValue('emote_dict', {})
         const chn_emote_dict = GM_getValue('chn_emote_dict', {})
 
+
+        if (GM_getValue('bobo_liker_uids', []).length == 0) {
+            await refershLikers();
+        }
+        const likers = GM_getValue('bobo_liker_uids', []);
+
         unsafeWindow.xhook.after(function(request, response) {
             if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
                 // 表情包面板
@@ -289,13 +390,13 @@
             } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
                 // 动态详情页
                 let response_json = JSON.parse(response.text);
-                injectDynamicItem(response_json?.data?.item, emote_dict, chn_emote_dict);
+                injectDynamicItem(response_json?.data?.item, emote_dict, chn_emote_dict, likers);
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
                 // 主时间线和个人主页
                 let response_json = JSON.parse(response.text);
                 for (let i in response_json.data.items) {
-                    injectDynamicItem(response_json.data.items[i], emote_dict, chn_emote_dict);
+                    injectDynamicItem(response_json.data.items[i], emote_dict, chn_emote_dict, likers);
                 }
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//app.bilibili.com/x/topic/web/details/cards')) {
@@ -304,7 +405,7 @@
                 for (let i in response_json.data.topic_card_list.items) {
                     let item = response_json.data.topic_card_list.items[i]
                     if (item.topic_type == 'DYNAMIC') {
-                        injectDynamicItem(item.dynamic_card_item, emote_dict, chn_emote_dict);
+                        injectDynamicItem(item.dynamic_card_item, emote_dict, chn_emote_dict, likers);
                     }
                 }
                 response.text = JSON.stringify(response_json);
@@ -332,50 +433,60 @@
 
     // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
-    const jsonpMutation = new MutationObserver(async (mutationList, observer) => {
-        if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refershEmote([])
-        }
-        const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
-        const emote_dict = GM_getValue('emote_dict', {})
-        const chn_emote_dict = GM_getValue('chn_emote_dict', {})
+    const jsonpMutation = (function () {
+        const resolved_emote_packs = GM_getValue('resolved_emote_packs', []);
+        const emote_dict = GM_getValue('emote_dict', {});
+        const chn_emote_dict = GM_getValue('chn_emote_dict', {});
 
-        for (const mutation of mutationList) {
-            if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+        const likers = GM_getValue('bobo_liker_uids') ?? [];
 
-            for (const node of mutation.addedNodes) {
-                if (node.localName !== 'script') continue;
+        return new MutationObserver(async (mutationList, observer) => {
+            if ((resolved_emote_packs ?? []).length == 0) {
+                await refershEmote([])
+            }
+            if ((likers ?? []).length == 0) {
+                await refershLikers();
+            }
 
-                const src = node.src;
-                if (src.includes('//api.bilibili.com')) {
-                    const matchResult = src.match(/callback=(.*?)&/);
-                    if (!matchResult) return;
-                    const callbackName = matchResult[1];
-                    const originFunc = unsafeWindow[callbackName];
+            for (const mutation of mutationList) {
+                if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
 
-                    unsafeWindow[callbackName] = (value) => {
-                        if (src.includes('//api.bilibili.com/x/v2/reply')) {
-                            for (let i in value.data.replies) {
-                                injectReplyItem(value.data.replies[i], chn_emote_dict);
-                            }
-                            if (value.data.top_replies) {
-                                for (let i in value.data.top_replies) {
-                                    injectReplyItem(value.data.top_replies[i], chn_emote_dict);
+                for (const node of mutation.addedNodes) {
+                    if (node.localName !== 'script') continue;
+
+                    const src = node.src;
+                    if (src.includes('//api.bilibili.com')) {
+                        const matchResult = src.match(/callback=(.*?)&/);
+                        if (!matchResult) return;
+                        const callbackName = matchResult[1];
+                        const originFunc = unsafeWindow[callbackName];
+
+                        unsafeWindow[callbackName] = (value) => {
+                            if (src.includes('//api.bilibili.com/x/v2/reply')) {
+                                for (let i in value.data.replies) {
+                                    injectReplyItem(value.data.replies[i], chn_emote_dict);
                                 }
+                                if (value.data.top_replies) {
+                                    for (let i in value.data.top_replies) {
+                                        injectReplyItem(value.data.top_replies[i], chn_emote_dict);
+                                    }
+                                }
+                                if (value.data.top) {
+                                    injectReplyItem(value.data.top.upper, chn_emote_dict);
+                                    modifyUserSailing([value.data.top?.upper], likers);
+                                }
+                                if (value.data.upper) {
+                                    injectReplyItem(value.data.upper.top, chn_emote_dict);
+                                }
+                                modifyUserSailing(value?.data?.replies, likers);
                             }
-                            if (value.data.top) {
-                                injectReplyItem(value.data.top.upper, chn_emote_dict);
-                            }
-                            if (value.data.upper) {
-                                injectReplyItem(value.data.upper.top, chn_emote_dict);
-                            }
-                        }
 
-                        originFunc(value);
+                            originFunc(value);
+                        }
                     }
                 }
             }
-        }
-    });
+        })
+    })();
     jsonpMutation.observe(unsafeWindow.document.head, { childList: true, subtree: true });
  })();
