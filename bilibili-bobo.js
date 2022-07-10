@@ -15,7 +15,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @connect      raw.githubusercontent.com
+// @connect      git.asf.ink
 // @connect      api.bilibili.com
 // ==/UserScript==
 
@@ -41,7 +41,7 @@
 
     // 下载url中的表情包并解析
     const defaultURLs = [
-        "https://raw.githubusercontent.com/AS042971/bili-emotes/main/%E5%95%B5%E5%95%B5.json"
+        "https://git.asf.ink/AS042971/bili-emotes/raw/branch/main/%E5%95%B5%E5%95%B5.json"
     ]
     let resolveEmoteURL = function(url){
         return new Promise(resolve => {
@@ -111,7 +111,7 @@
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
-              <div>附加表情：</div>
+              <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
               <button id="bobo-emotes-update-likes">更新订阅</button>
@@ -122,8 +122,8 @@
         let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
-        let emoteURLs = GM_getValue('emote_urls') ?? []
-        let lastUpdate = GM_getValue('last_update')
+        let emoteURLs = GM_getValue('emote_urls', [])
+        let lastUpdate = GM_getValue('last_update', 0)
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
         urlBox.value = emoteURLs.join('\n');
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
@@ -273,12 +273,12 @@
     // 添加XHR钩子，用于增加表情包和注入动态
     xhookLoad.then(async () => {
         // 动态直接通过 Hook XHR 响应完成
-        if (GM_getValue('resolved_emote_packs').length == 0) {
+        if (GM_getValue('resolved_emote_packs', []).length == 0) {
             await refershEmote([])
         }
-        const resolved_emote_packs = GM_getValue('resolved_emote_packs') ?? []
-        const emote_dict = GM_getValue('emote_dict') ?? {}
-        const chn_emote_dict = GM_getValue('chn_emote_dict') ?? {}
+        const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
+        const emote_dict = GM_getValue('emote_dict', {})
+        const chn_emote_dict = GM_getValue('chn_emote_dict', {})
 
         unsafeWindow.xhook.after(function(request, response) {
             if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
@@ -333,12 +333,12 @@
     // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
     const jsonpMutation = new MutationObserver(async (mutationList, observer) => {
-        if (GM_getValue('resolved_emote_packs').length == 0) {
+        if (GM_getValue('resolved_emote_packs', []).length == 0) {
             await refershEmote([])
         }
-        const resolved_emote_packs = GM_getValue('resolved_emote_packs') ?? []
-        const emote_dict = GM_getValue('emote_dict') ?? {}
-        const chn_emote_dict = GM_getValue('chn_emote_dict') ?? {}
+        const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
+        const emote_dict = GM_getValue('emote_dict', {})
+        const chn_emote_dict = GM_getValue('chn_emote_dict', {})
 
         for (const mutation of mutationList) {
             if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
@@ -378,6 +378,4 @@
         }
     });
     jsonpMutation.observe(unsafeWindow.document.head, { childList: true, subtree: true });
-
-    console.log("啵啵表情包加载完成");
  })();
