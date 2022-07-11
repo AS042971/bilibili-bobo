@@ -38,6 +38,24 @@
             resolve();
         }
     });
+  
+    let animateArr = [
+      // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/0c8e72f4810842303ca1ab4cac165c737a1cf104.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/9fae5a001015cfe99949ee0a1a70f21f00d0c206.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/f9a3f4aadb1cf268fc411c7b4cc99d07df3e778a.bin',
+      'https://i0.hdslb.com/bfs/garb/item/83b07276da522b9cac7803160a2c3338249f2cb8.bin',
+    ]
+    let times = 0;
+    let timer = setInterval(() => {
+      let data = unsafeWindow.__INITIAL_STATE__;
+      if (data || times > 50) {
+          if (data && !data.videoData.user_garb.url_image_ani_cut) data.videoData.user_garb.url_image_ani_cut = animateArr[0];
+          clearInterval(timer);
+      }
+      times++;
+    }, 100);
 
     // 下载url中的表情包并解析
     const defaultURLs = [
@@ -132,11 +150,15 @@
         wrapperEl.setAttribute('id', 'bobo-emotes-settings-dialog-wrapper');
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
-            <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
-              <div>啵啵卡片：</div><br/>
+            <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
+              <div>啵啵卡片：</div>
               <button id="bobo-likers-update">更新啵版列表</button>
               <div id="bobo-likers-update-text"></div>
               <hr />
+              <div>点赞特效（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
+              <button id="bobo-like-icon-update">更新订阅</button>
+              <hr/>
               <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
@@ -146,15 +168,19 @@
         `;
         unsafeWindow.document.body.appendChild(wrapperEl);
         let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
+        let updateIconBtn = unsafeWindow.document.getElementById('bobo-like-icon-update');
         let updateLikerBtn = unsafeWindow.document.getElementById('bobo-likers-update');
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
+        let iconUrlBox = unsafeWindow.document.getElementById('bobo-like-icon-url-input');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
         let emoteURLs = GM_getValue('emote_urls', [])
+        let likeIconList = GM_getValue('like_icons', []);
         let lastUpdate = GM_getValue('last_update', 0)
         let lastLikersUpdate = GM_getValue('last_likers_update');
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
         let likerText = unsafeWindow.document.getElementById('bobo-likers-update-text');
         urlBox.value = emoteURLs.join('\n');
+        iconUrlBox.value = likeIconList.join('\n');
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
         likerText.innerText = '上次更新时间：' + ((lastLikersUpdate)? lastLikersUpdate : '从未更新');
         updateBtn.addEventListener('click', async () => {
@@ -166,6 +192,10 @@
             el.innerText = '更新订阅成功，请刷新网页后使用！';
             GM_setValue('last_update', Date());
             boboListUpdating = false;
+        });
+        updateIconBtn.addEventListener('click', async () => {
+            let urls = iconUrlBox.value.split(/\n+/);
+            GM_setValue('like_icons', urls);
         });
         updateLikerBtn.addEventListener('click', async () => {
             boboLikerUpdating = true;
@@ -231,6 +261,9 @@
     let injectDynamicItem = function(item, emote_dict, chn_emote_dict, likers) {
 
         if (likers) {
+            if (item?.basic?.like_icon && !item.basic.like_icon.action_url) {
+              item.basic.like_icon.action_url = animateArr[0];
+            }
             const uid = item?.modules?.module_author?.mid;
             if (uidMatch(likers, uid)) {
                 const number = getFansNumber(uid);
@@ -375,11 +408,40 @@
         const emote_dict = GM_getValue('emote_dict', {})
         const chn_emote_dict = GM_getValue('chn_emote_dict', {})
 
+        const likeIcons = GM_getValue('like_icons', [])
 
         if (GM_getValue('bobo_liker_uids', []).length == 0) {
             await refershLikers();
         }
         const likers = GM_getValue('bobo_liker_uids', []);
+
+        unsafeWindow.xhook.before(function(request, callback) {
+          if(request.url.includes('//i0.hdslb.com/bfs/garb/item') && likeIcons.length > 0) {
+              let animateNum = Math.floor(Math.random() * likeIcons.length);
+              let url = likeIcons[animateNum];
+                  GM_xmlhttpRequest({
+                      url,
+                      method : "GET",
+                      responseType: "blob",
+                      onload : function(data){
+                        data.response.arrayBuffer()
+                          .then(arr => {
+                              callback({
+                                status: 200,
+                                statusText: '',
+                                data: arr,
+                                finalUrl: request.url
+                              });
+                          })
+                      },
+                      onerror : function(err) {
+                        callback();
+                      }
+                  });
+          } else {
+            callback();
+          }
+        });
 
         unsafeWindow.xhook.after(function(request, response) {
             if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
