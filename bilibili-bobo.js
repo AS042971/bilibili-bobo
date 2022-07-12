@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
- // @version      0.3.0
+// @version      0.3.0
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -38,7 +38,7 @@
             resolve();
         }
     });
-  
+
     let animateArr = [
       // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
       // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
@@ -227,9 +227,12 @@
         });
     }
     let createEmoteBtn = function() {
-        const settingBtnEl = unsafeWindow.document.createElement("div");
+        // 将配置按钮添加到头像弹出面板
+        let linkItem = unsafeWindow.document.querySelector('.links-item');
+        if (linkItem && !linkItem.classList.contains('contains-setting')){
+            const settingBtnEl = unsafeWindow.document.createElement("div");
 
-        settingBtnEl.innerHTML = `
+            settingBtnEl.innerHTML = `
 <div class="single-link-item">
   <div class="link-title"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
       class="link-icon">
@@ -251,13 +254,11 @@
   </svg>
 </div>
       `;
-        // 将配置按钮添加到头像弹出面板
-        let linkItem = unsafeWindow.document.querySelector('.links-item');
-        if (linkItem){
             settingBtnEl.addEventListener('click', () => {
                 createEmotePanel();
             });
             linkItem.appendChild(settingBtnEl);
+            linkItem.classList.add('contains-setting');
         }
     }
 
@@ -398,20 +399,35 @@
     }
 
     // 页面加载完成后添加表情配置面板按钮
-    unsafeWindow.addEventListener('load', () => {
-        // 在动态页面增加设置按钮，用来更新点赞者列表
-        let emoteMutation = new MutationObserver(async (mutationList, observer) => {
+    unsafeWindow.addEventListener('DOMContentLoaded', () => {
+        let vPoperMutation = new MutationObserver(async (mutationList, observer) => {
             for (const mutation of mutationList) {
                 if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
-                if (mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains('v-popover')) {
-                    createEmoteBtn();
-                    emoteMutation.disconnect();
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('v-popover') && node.classList?.contains('is-bottom')) {
+                        createEmoteBtn();
+                        vPoperMutation.disconnect();
+                    }
                 }
             }
         });
-        let headerWarp = unsafeWindow.document.querySelector('.header-avatar-wrap');
-        if (headerWarp) {
-            emoteMutation.observe(headerWarp, { childList: true, subtree: true });
+        let emoteMutation = new MutationObserver(async (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('right-entry')) {
+                        vPoperMutation.observe(node.childNodes[0], { childList: true, subtree: true });
+                        emoteMutation.disconnect();
+                    }
+                }
+            }
+        });
+
+        let entryNode = unsafeWindow.document.querySelector('.right-entry');
+        if (entryNode) {
+            vPoperMutation.observe(entryNode.childNodes[0], { childList: true, subtree: true });
+        } else {
+            emoteMutation.observe(unsafeWindow.document.body, { childList: true, subtree: true });
         }
     });
 
