@@ -438,22 +438,29 @@
       for (let i = 0; i < replies.length; i++) {
         const memberData = replies[i]?.member;
         if (!memberData) continue;
-        if (uidMatch(likers, +memberData.mid)){
-          const number = getFansNumber(+memberData.mid);
-          memberData.user_sailing.cardbg = {
-              "id": 33521,
-              "name": "三三与她的小桂物",
-              "image": "https://i0.hdslb.com/bfs/new_dyn/223325d6ff3c467a762eacd8cebad5bd1320060365.png",
-              "jump_url": "https://space.bilibili.com/33605910",
-              "fan": {
-                  "is_fan": 1,
-                  "number": number,
-                  "color": "#ff7373",
-                  "name": "三三与她的小桂物",
-                  "num_desc": number + ''
-              },
-              "type": "suit"
-          }
+        if (uidMatch(likers, +memberData.mid)) {
+            const number = getFansNumber(+memberData.mid);
+            if (!memberData.user_sailing) {
+                memberData.user_sailing = {
+                    cardbg: null,
+                    cardbg_with_focus: null,
+                    pendant: null,
+                };
+            }
+            memberData.user_sailing.cardbg = {
+                "id": 33521,
+                "name": "三三与她的小桂物",
+                "image": "https://i0.hdslb.com/bfs/new_dyn/223325d6ff3c467a762eacd8cebad5bd1320060365.png",
+                "jump_url": "https://space.bilibili.com/33605910",
+                "fan": {
+                    "is_fan": 1,
+                    "number": number,
+                    "color": "#ff7373",
+                    "name": "三三与她的小桂物",
+                    "num_desc": number + ''
+                },
+                "type": "suit"
+            }
         }
       }
     }
