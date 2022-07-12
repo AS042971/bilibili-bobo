@@ -544,12 +544,17 @@
             // card.name = "【真】" + card.name;
             return;
         }
-        if (eunuchs.some(eunuch => eunuch.uid === uid)) {
+        const eunuch = eunuchs.find(eunuch => eunuch.uid === uid);
+        if (eunuch) {
             card.name = "【太监】" + card.mid;
             card.face = "https://s2.loli.net/2022/07/10/LcniJT8ACRdyt69.png";
-            card.sign = (eunuchs.reason ?? "" + "（原签名已屏蔽）");
+            let reason = eunuch.reason ?? '';
+            if (reason === '') {
+                reason = '未记录原因，谨慎判断';
+            }
+            card.sign = reason + "（原签名已屏蔽）";
         } else {
-            // card.name = "【测试】" + card.name;
+            card.name = "【测试】" + card.name;
         }
     }
 
@@ -749,6 +754,9 @@
                                 }
                                 modifyUserSailing(value?.data?.replies, likers);
                                 addReplyUserTag(value?.data?.replies, eunuchs);
+                            }
+                            else if (src.includes('//api.bilibili.com/x/web-interface/card')) {
+                                modifyUserCard(value?.data, eunuchs);
                             }
 
                             originFunc(value);
