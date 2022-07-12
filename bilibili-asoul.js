@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.0
+// @version      0.3.1
 // @description  在 Bilibili 表情包中增加A-Soul二创系列
 // @author       as042971
 // @author       milkiq
@@ -38,6 +38,24 @@
             resolve();
         }
     });
+  
+    let animateArr = [
+      // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/0c8e72f4810842303ca1ab4cac165c737a1cf104.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/9fae5a001015cfe99949ee0a1a70f21f00d0c206.bin',
+      // 'https://i0.hdslb.com/bfs/garb/item/f9a3f4aadb1cf268fc411c7b4cc99d07df3e778a.bin',
+      'https://i0.hdslb.com/bfs/garb/item/83b07276da522b9cac7803160a2c3338249f2cb8.bin',
+    ]
+    let times = 0;
+    let timer = setInterval(() => {
+      let data = unsafeWindow.__INITIAL_STATE__;
+      if (data || times > 50) {
+          if (data && !data.videoData.user_garb.url_image_ani_cut) data.videoData.user_garb.url_image_ani_cut = animateArr[0];
+          clearInterval(timer);
+      }
+      times++;
+    }, 100);
 
     // 下载url中的表情包并解析
     const defaultURLs = [
@@ -110,7 +128,12 @@
         wrapperEl.setAttribute('id', 'bobo-emotes-settings-dialog-wrapper');
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
-            <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 300px;background: #fff;border-radius:10px;padding: 30px;">
+            <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
+              <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
+              <div id="bobo-like-icon-text">随机使用订阅的动画</div>
+              <button id="bobo-like-icon-update">更新订阅</button>
+              <hr/>
               <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
@@ -120,12 +143,17 @@
         `;
         unsafeWindow.document.body.appendChild(wrapperEl);
         let updateBtn = unsafeWindow.document.getElementById('bobo-emotes-update-likes');
+        let updateIconBtn = unsafeWindow.document.getElementById('bobo-like-icon-update');
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
+        let iconUrlBox = unsafeWindow.document.getElementById('bobo-like-icon-url-input');
         let emoteURLs = GM_getValue('emote_urls', [])
+        let likeIconList = GM_getValue('like_icons', []);
         let lastUpdate = GM_getValue('last_update', 0)
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
+        let likeIconText = unsafeWindow.document.getElementById('bobo-like-icon-text');
         urlBox.value = emoteURLs.join('\n');
+        iconUrlBox.value = likeIconList.join('\n');
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
         updateBtn.addEventListener('click', async () => {
             boboListUpdating = true;
@@ -137,6 +165,12 @@
             GM_setValue('last_update', Date());
             boboListUpdating = false;
         });
+        updateIconBtn.addEventListener('click', async () => {
+            let urls = iconUrlBox.value.split(/\n+/);
+            urls = urls.map(url => url.trim()).filter(url => !!url);
+            GM_setValue('like_icons', urls);
+            likeIconText.innerText = `已更新订阅，使用${urls.length}个动画`;
+        });
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
             if (boboListUpdating) {
                 alert('正在更新中，请勿退出，关闭页面会导致更新失败');
@@ -146,9 +180,12 @@
         });
     }
     let createEmoteBtn = function() {
-        const settingBtnEl = unsafeWindow.document.createElement("div");
+        // 将配置按钮添加到头像弹出面板
+        let linkItem = unsafeWindow.document.querySelector('.links-item');
+        if (linkItem && !linkItem.classList.contains('contains-setting')){
+            const settingBtnEl = unsafeWindow.document.createElement("div");
 
-        settingBtnEl.innerHTML = `
+            settingBtnEl.innerHTML = `
 <div class="single-link-item">
   <div class="link-title"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
       class="link-icon">
@@ -170,23 +207,24 @@
   </svg>
 </div>
       `;
-        // 将配置按钮添加到头像弹出面板
-        let linkItem = unsafeWindow.document.querySelector('.links-item');
-        if (linkItem){
             settingBtnEl.addEventListener('click', () => {
                 createEmotePanel();
             });
             linkItem.appendChild(settingBtnEl);
+            linkItem.classList.add('contains-setting');
         }
     }
 
     // 注入动态和评论
     let injectDynamicItem = function(item, emote_dict, chn_emote_dict) {
+        if (item?.basic?.like_icon && !item.basic.like_icon.action_url) {
+            item.basic.like_icon.action_url = animateArr[0];
+        }
         let nodes = item?.modules?.module_dynamic?.desc?.rich_text_nodes;
         if (nodes) {
             for (let i = 0; i < nodes.length; i++) {
                 // 处理【】的问题
-                if (nodes[i].text.includes('【')) {
+                if (nodes[i]?.text && nodes[i].text.includes('【')) {
                     let splitResult = nodes[i].text.split(/(【.+?】)/g).filter(str=>{return str != ""});
                     nodes.splice(i,1)
                     for (let idx in splitResult) {
@@ -253,20 +291,35 @@
     }
 
     // 页面加载完成后添加表情配置面板按钮
-    unsafeWindow.addEventListener('load', () => {
-        // 在动态页面增加设置按钮，用来更新点赞者列表
-        let emoteMutation = new MutationObserver(async (mutationList, observer) => {
+    unsafeWindow.addEventListener('DOMContentLoaded', () => {
+        let vPoperMutation = new MutationObserver(async (mutationList, observer) => {
             for (const mutation of mutationList) {
                 if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
-                if (mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains('v-popover')) {
-                    createEmoteBtn();
-                    emoteMutation.disconnect();
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('v-popover') && node.classList?.contains('is-bottom')) {
+                        createEmoteBtn();
+                        vPoperMutation.disconnect();
+                    }
                 }
             }
         });
-        let headerWarp = unsafeWindow.document.querySelector('.header-avatar-wrap');
-        if (headerWarp) {
-            emoteMutation.observe(headerWarp, { childList: true, subtree: true });
+        let emoteMutation = new MutationObserver(async (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('right-entry')) {
+                        vPoperMutation.observe(node.childNodes[0], { childList: true, subtree: true });
+                        emoteMutation.disconnect();
+                    }
+                }
+            }
+        });
+
+        let entryNode = unsafeWindow.document.querySelector('.right-entry');
+        if (entryNode) {
+            vPoperMutation.observe(entryNode.childNodes[0], { childList: true, subtree: true });
+        } else {
+            emoteMutation.observe(unsafeWindow.document.body, { childList: true, subtree: true });
         }
     });
 
@@ -279,6 +332,36 @@
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})
         const chn_emote_dict = GM_getValue('chn_emote_dict', {})
+
+        const likeIcons = GM_getValue('like_icons', []);
+
+        unsafeWindow.xhook.before(function(request, callback) {
+            if(request.url.includes('//i0.hdslb.com/bfs/garb/item') && likeIcons.length > 0) {
+                let animateNum = Math.floor(Math.random() * likeIcons.length);
+                let url = likeIcons[animateNum];
+                    GM_xmlhttpRequest({
+                        url,
+                        method : "GET",
+                        responseType: "blob",
+                        onload : function(data){
+                          data.response.arrayBuffer()
+                            .then(arr => {
+                                callback({
+                                  status: 200,
+                                  statusText: '',
+                                  data: arr,
+                                  finalUrl: request.url
+                                });
+                            })
+                        },
+                        onerror : function(err) {
+                          callback();
+                        }
+                    });
+            } else {
+              callback();
+            }
+        });
 
         unsafeWindow.xhook.after(function(request, response) {
             if (request.url.includes('//api.bilibili.com/x/emote/user/panel/web?business=reply')) {
