@@ -151,7 +151,9 @@
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
-              <div>啵啵卡片：</div>
+              <div>啵啵动态卡片/评论背景：</div>
+              <input type="checkbox" id="card-switch">
+              <label for="cardSwitch">开启动态卡片/评论背景</label>
               <button id="bobo-likers-update">更新啵版列表</button>
               <div id="bobo-likers-update-text"></div>
               <hr />
@@ -173,14 +175,17 @@
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let iconUrlBox = unsafeWindow.document.getElementById('bobo-like-icon-url-input');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
+        let cardSwitch = unsafeWindow.document.getElementById('card-switch');
         let emoteURLs = GM_getValue('emote_urls', [])
         let likeIconList = GM_getValue('like_icons', []);
+        let showCard = GM_getValue('show_card', false);
         let lastUpdate = GM_getValue('last_update', 0)
         let lastLikersUpdate = GM_getValue('last_likers_update');
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
         let likerText = unsafeWindow.document.getElementById('bobo-likers-update-text');
         urlBox.value = emoteURLs.join('\n');
         iconUrlBox.value = likeIconList.join('\n');
+        cardSwitch.checked = showCard;
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
         likerText.innerText = '上次更新时间：' + ((lastLikersUpdate)? lastLikersUpdate : '从未更新');
         updateBtn.addEventListener('click', async () => {
@@ -206,6 +211,10 @@
             GM_setValue('last_likers_update', Date());
             boboLikerUpdating = false;
         });
+        cardSwitch.addEventListener('click', () => {
+            GM_setValue('show_card', cardSwitch.checked);
+            likerText.innerText = `已${cardSwitch.checked ? '开启' : '关闭'}卡片，刷新后生效`;
+        })
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
             if (boboListUpdating || boboLikerUpdating) {
                 alert('正在更新中，请勿退出，关闭页面会导致更新失败');
@@ -265,8 +274,9 @@
             if (item?.basic?.like_icon && !item.basic.like_icon.action_url) {
               item.basic.like_icon.action_url = animateArr[0];
             }
+            const showCard = GM_getValue('show_card', false);
             const uid = item?.modules?.module_author?.mid;
-            if (uidMatch(likers, uid)) {
+            if (showCard && uidMatch(likers, uid)) {
                 const number = getFansNumber(uid);
                 item.modules.module_author.decorate = {
                     "card_url": "https://i0.hdslb.com/bfs/new_dyn/a3c6601ddcf82030e4e3bd3ebf148e411320060365.png",
@@ -357,6 +367,9 @@
         }
     }
     let modifyUserSailing = function (replies, likers = []) {
+      const showCard = GM_getValue('show_card', false);
+      if (!showCard) return;
+
       replies = replies ?? [];
       for (let i = 0; i < replies.length; i++) {
         const memberData = replies[i]?.member;
