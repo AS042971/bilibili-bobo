@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.0
+ // @version      0.3.0
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -38,7 +38,7 @@
             resolve();
         }
     });
-
+  
     let animateArr = [
       // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
       // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
@@ -142,6 +142,27 @@
         GM_setValue('bobo_liker_uids', queryData ?? []);
     }
 
+    let refreshEunuchs = async function() {
+        const queryData = await new Promise(resolve => {
+            GM_xmlhttpRequest({
+                url: 'https://git.asf.ink/milkiq/bilibili-uids/raw/branch/master/eunuchs.json',
+                method : "GET",
+                onload : function(data){
+                    try {
+                        let json = JSON.parse(data.responseText);
+                        resolve(json);
+                    } catch (error) {
+                        resolve([]);
+                    }
+                },
+                onerror : function(err) {
+                    resolve([]);
+                }
+            });
+        });
+        GM_setValue('eunuchs', queryData ?? []);
+    }
+
     // 表情配置面板
     let createEmotePanel = function() {
         let boboListUpdating = false;
@@ -167,6 +188,19 @@
               <div id="bobo-emotes-update-text"></div>
               <button id="bobo-emotes-update-likes">更新订阅</button>
               <button id="bobo-emotes-setting-cancel" style="float: right;">退出设置</button>
+              <hr />
+              <div>好孩子别往下看</div>
+              <div>
+                启用 Eunuch Tagger
+                <input type="checkbox" id="eunuch-tagger-switch">
+              </div>
+              <div>
+                屏蔽动态
+                <input type="checkbox" id="eunuch-tagger-block-dynamic">
+              </div>
+              <button id="eunuch-tagger-update">更新名单</button>
+              <div id="eunuch-tagger-update-text"></div>
+              <div>目前名单数量较多，可能存在误伤</div>
             </div>
         `;
         unsafeWindow.document.body.appendChild(wrapperEl);
@@ -176,7 +210,7 @@
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let iconUrlBox = unsafeWindow.document.getElementById('bobo-like-icon-url-input');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
-        let cardSwitch = unsafeWindow.document.getElementById('card-switch');
+        let cardSwitch = unsafeWindow.document.getElementById('card-switch');        
         let emoteURLs = GM_getValue('emote_urls', [])
         let likeIconList = GM_getValue('like_icons', []);
         let showCard = GM_getValue('show_card', false);
@@ -185,11 +219,22 @@
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
         let likerText = unsafeWindow.document.getElementById('bobo-likers-update-text');
         let likeIconText = unsafeWindow.document.getElementById('bobo-like-icon-text');
+        // eunuch tagger
+        let eunuchTaggerSwitch = unsafeWindow.document.getElementById('eunuch-tagger-switch');
+        let eunuchTaggerBlockDynamic = unsafeWindow.document.getElementById('eunuch-tagger-block-dynamic');
+        let eunuchUpdateBtn = unsafeWindow.document.getElementById('eunuch-tagger-update');
+        let eunuchTaggerSettings = GM_getValue('eunuch_tagger_settings', {});
+        let eunuchTaggerUpdateText = unsafeWindow.document.getElementById('eunuch-tagger-update-text');
+
         urlBox.value = emoteURLs.join('\n');
         iconUrlBox.value = likeIconList.join('\n');
         cardSwitch.checked = showCard;
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
         likerText.innerText = '上次更新时间：' + ((lastLikersUpdate)? lastLikersUpdate : '从未更新');
+        // eunuch tagger
+        eunuchTaggerSwitch.checked = eunuchTaggerSettings.enableEunuchTagger ?? false;
+        eunuchTaggerBlockDynamic.checked = eunuchTaggerSettings.blockDynamic ?? false;
+
         updateBtn.addEventListener('click', async () => {
             boboListUpdating = true;
             el.innerText = '正在更新订阅，请稍等…';
@@ -224,6 +269,21 @@
                 return;
             }
             wrapperEl.remove();
+        });
+        // eunuch tagger
+        eunuchTaggerSwitch.addEventListener('click', () => {
+            eunuchTaggerSettings.enableEunuchTagger = eunuchTaggerSwitch.checked;
+            GM_setValue('eunuch_tagger_settings', eunuchTaggerSettings);
+        });
+        eunuchTaggerBlockDynamic.addEventListener('click', () => {
+            eunuchTaggerSettings.blockDynamic = eunuchTaggerBlockDynamic.checked;
+            GM_setValue('eunuch_tagger_settings', eunuchTaggerSettings);
+        });
+        eunuchUpdateBtn.addEventListener('click', async () => {
+            // console.log("update");
+            eunuchTaggerUpdateText.innerText = '正在更新数据，请稍等…';
+            await refreshEunuchs();
+            eunuchTaggerUpdateText.innerText = '更新数据成功，请刷新网页后使用！';
         });
     }
     let createEmoteBtn = function() {
@@ -398,6 +458,105 @@
       }
     }
 
+    // 评论标记
+    let addReplyUserTag = function(replies, eunuchs = []) {
+        const settings = GM_getValue('eunuch_tagger_settings', {});
+        if (!(settings.enableEunuchTagger ?? false)) {
+            return;
+        }
+
+        replies = replies ?? [];
+        for (let i = 0; i < replies.length; i++) {
+            const memberData = replies[i]?.member;
+            if (!memberData) continue;
+
+            const uid = +memberData.mid;
+            if (uid === 33605910) {
+                // memberData.uname = "【真】" + memberData.uname;
+            } else if (eunuchs.some(eunuch => eunuch.uid === uid)) {
+                memberData.uname = "【太监】" + memberData.mid;
+                memberData.face = "https://s2.loli.net/2022/07/10/LcniJT8ACRdyt69.png";
+                memberData.avatar = "https://s2.loli.net/2022/07/10/LcniJT8ACRdyt69.png";
+            } else {
+                // memberData.uname = "【测试】" + memberData.uname;
+            }
+
+            const subreplies = replies[i]?.replies;
+            if (subreplies) {
+                addReplyUserTag(subreplies, eunuchs);
+            }
+        }
+    }
+
+    // 动态标记
+    let addDynamicUserTag = function(item, eunuchs = []) {
+        const settings = GM_getValue('eunuch_tagger_settings', {});
+        if (!(settings.enableEunuchTagger ?? false)) {
+            return;
+        }
+
+        const uid = +(item?.modules?.module_author?.mid);
+        if (!uid) return;
+
+        if (uid === 33605910) {
+            // item.modules.module_author.name = "【真】" + item.modules.module_author.name;
+        } else if (eunuchs.some(eunuch => eunuch.uid === uid)) {
+            item.modules.module_author.name = "【太监】" + item.modules.module_author.mid;
+            item.modules.module_author.face = "https://s2.loli.net/2022/07/10/LcniJT8ACRdyt69.png";
+            if (settings.blockDynamic ?? false) {
+                item.modules.module_dynamic = {
+                    "additional": null,
+                    "desc": {
+                        "rich_text_nodes": [
+                            {
+                                "orig_text": "已屏蔽",
+                                "text": "已屏蔽",
+                                "type": "RICH_TEXT_NODE_TYPE_TEXT"
+                            }
+                        ],
+                        "text": "已屏蔽"
+                    },
+                    "major": null,
+                    "topic": null
+                };
+            }
+        } else {
+            // item.modules.module_author.name = "【测试】" + item.modules.module_author.name;
+        }
+
+        if (item?.orig) {
+            addDynamicUserTag(item.orig, eunuchs);
+        }
+    }
+
+    // 鼠标悬浮显示的卡片
+    // 这个还不完善
+    let modifyUserCard = function(data, eunuchs = []) {
+        const settings = GM_getValue('eunuch_tagger_settings', {});
+        if (!(settings.enableEunuchTagger ?? false)) {
+            return;
+        }
+
+        const card = data.card;
+        const uid = +card.mid;
+        if (uid === 33605910) {
+            // card.name = "【真】" + card.name;
+            return;
+        }
+        const eunuch = eunuchs.find(eunuch => eunuch.uid === uid);
+        if (eunuch) {
+            card.name = "【太监】" + card.mid;
+            card.face = "https://s2.loli.net/2022/07/10/LcniJT8ACRdyt69.png";
+            let reason = eunuch.reason ?? '';
+            if (reason === '') {
+                reason = '未记录原因，谨慎判断';
+            }
+            card.sign = reason + "（原签名已屏蔽）";
+        } else {
+            card.name = "【测试】" + card.name;
+        }
+    }
+
     // 页面加载完成后添加表情配置面板按钮
     unsafeWindow.addEventListener('DOMContentLoaded', () => {
         let vPoperMutation = new MutationObserver(async (mutationList, observer) => {
@@ -447,6 +606,7 @@
             await refershLikers();
         }
         const likers = GM_getValue('bobo_liker_uids', []);
+        const eunuchs = GM_getValue('eunuchs', []);
 
         unsafeWindow.xhook.before(function(request, callback) {
           if(request.url.includes('//i0.hdslb.com/bfs/garb/item') && likeIcons.length > 0) {
@@ -484,14 +644,17 @@
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
                 // 动态详情页
+                // console.log(request.url);
                 let response_json = JSON.parse(response.text);
                 injectDynamicItem(response_json?.data?.item, emote_dict, chn_emote_dict, likers);
+                addDynamicUserTag(response_json?.data?.item, eunuchs);
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/space') || request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/feed/all')) {
                 // 主时间线和个人主页
                 let response_json = JSON.parse(response.text);
                 for (let i in response_json.data.items) {
                     injectDynamicItem(response_json.data.items[i], emote_dict, chn_emote_dict, likers);
+                    addDynamicUserTag(response_json.data.items[i], eunuchs);
                 }
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//app.bilibili.com/x/topic/web/details/cards')) {
@@ -501,6 +664,7 @@
                     let item = response_json.data.topic_card_list.items[i]
                     if (item.topic_type == 'DYNAMIC') {
                         injectDynamicItem(item.dynamic_card_item, emote_dict, chn_emote_dict, likers);
+                        addDynamicUserTag(item.dynamic_card_item, eunuchs);
                     }
                 }
                 response.text = JSON.stringify(response_json);
@@ -512,11 +676,13 @@
                         injectReplyItem(response_json.data.top_replies[i], chn_emote_dict);
                     }
                     modifyUserSailing(response_json.data.top_replies, likers);
+                    addReplyUserTag(response_json.data.top_replies, eunuchs);
                 }
                 for (let i in response_json.data.replies) {
                     injectReplyItem(response_json.data.replies[i], chn_emote_dict);
                 }
                 modifyUserSailing(response_json.data.replies, likers);
+                addReplyUserTag(response_json.data.replies, eunuchs);
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/v2/reply/add')) {
                 // 新增评论的 POST 接口，返回值中是处理过的评论内容
@@ -524,6 +690,12 @@
                 let response_json = JSON.parse(response.text);
                 injectReplyItem(response_json.data.reply, chn_emote_dict);
                 modifyUserSailing([response_json.data.reply], likers);
+                addReplyUserTag([response_json.data.reply], eunuchs);
+                response.text = JSON.stringify(response_json);
+            } else if (request.url.includes('//api.bilibili.com/x/web-interface/card')) {
+                // 鼠标悬停显示的用户卡片
+                let response_json = JSON.parse(response.text);
+                modifyUserCard(response_json.data, eunuchs);
                 response.text = JSON.stringify(response_json);
             }
         });
@@ -537,6 +709,7 @@
         const chn_emote_dict = GM_getValue('chn_emote_dict', {});
 
         const likers = GM_getValue('bobo_liker_uids') ?? [];
+        const eunuchs = GM_getValue('eunuchs', []);
 
         return new MutationObserver(async (mutationList, observer) => {
             if ((resolved_emote_packs ?? []).length == 0) {
@@ -572,11 +745,17 @@
                                 if (value.data.top) {
                                     injectReplyItem(value.data.top.upper, chn_emote_dict);
                                     modifyUserSailing([value.data.top?.upper], likers);
+                                    addReplyUserTag([value.data.top?.upper], eunuchs);
+                                    // console.log(value.data.top.upper.member.uname);
                                 }
                                 if (value.data.upper) {
                                     injectReplyItem(value.data.upper.top, chn_emote_dict);
                                 }
                                 modifyUserSailing(value?.data?.replies, likers);
+                                addReplyUserTag(value?.data?.replies, eunuchs);
+                            }
+                            else if (src.includes('//api.bilibili.com/x/web-interface/card')) {
+                                modifyUserCard(value?.data, eunuchs);
                             }
 
                             originFunc(value);
