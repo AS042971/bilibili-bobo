@@ -17,6 +17,7 @@
 // @grant        GM_xmlhttpRequest
 // @connect      git.asf.ink
 // @connect      api.bilibili.com
+// @connect      47.114.189.50
 // ==/UserScript==
 
 (async function() {
