@@ -131,6 +131,7 @@
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
               <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
+              <div id="bobo-like-icon-text">随机使用订阅的动画</div>
               <button id="bobo-like-icon-update">更新订阅</button>
               <hr/>
               <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
@@ -150,6 +151,7 @@
         let likeIconList = GM_getValue('like_icons', []);
         let lastUpdate = GM_getValue('last_update', 0)
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
+        let likeIconText = unsafeWindow.document.getElementById('bobo-like-icon-text');
         urlBox.value = emoteURLs.join('\n');
         iconUrlBox.value = likeIconList.join('\n');
         el.innerText = '上次更新时间：' + ((lastUpdate)? lastUpdate : '从未更新');
@@ -167,6 +169,7 @@
             let urls = iconUrlBox.value.split(/\n+/);
             urls = urls.map(url => url.trim()).filter(url => !!url);
             GM_setValue('like_icons', urls);
+            likeIconText.innerText = `已更新订阅，使用${urls.length}个动画`;
         });
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
             if (boboListUpdating) {
