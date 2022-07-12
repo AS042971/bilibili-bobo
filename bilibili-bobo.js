@@ -560,7 +560,7 @@
             }
             card.sign = reason + "（原签名已屏蔽）";
         } else {
-            card.name = "【测试】" + card.name;
+            // card.name = "【测试】" + card.name;
         }
     }
 
