@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.2
+// @version      0.3.3
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -17,6 +17,7 @@
 // @grant        GM_xmlhttpRequest
 // @connect      git.asf.ink
 // @connect      api.bilibili.com
+// @connect      i0.hdslb.com
 // ==/UserScript==
 
 (async function() {
@@ -38,7 +39,7 @@
             resolve();
         }
     });
-  
+
     let animateArr = [
       // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
       // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
@@ -210,7 +211,7 @@
         let cancelBtn = unsafeWindow.document.getElementById('bobo-emotes-setting-cancel');
         let iconUrlBox = unsafeWindow.document.getElementById('bobo-like-icon-url-input');
         let urlBox = unsafeWindow.document.getElementById('bobo-emotes-url-input');
-        let cardSwitch = unsafeWindow.document.getElementById('card-switch');        
+        let cardSwitch = unsafeWindow.document.getElementById('card-switch');
         let emoteURLs = GM_getValue('emote_urls', [])
         let likeIconList = GM_getValue('like_icons', []);
         let showCard = GM_getValue('show_card', false);
