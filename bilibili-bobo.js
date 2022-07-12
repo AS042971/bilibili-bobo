@@ -180,6 +180,7 @@
               <hr />
               <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
+              <div id="bobo-like-icon-text">随机使用订阅的动画</div>
               <button id="bobo-like-icon-update">更新订阅</button>
               <hr/>
               <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
@@ -217,6 +218,7 @@
         let lastLikersUpdate = GM_getValue('last_likers_update');
         let el = unsafeWindow.document.getElementById('bobo-emotes-update-text');
         let likerText = unsafeWindow.document.getElementById('bobo-likers-update-text');
+        let likeIconText = unsafeWindow.document.getElementById('bobo-like-icon-text');
         // eunuch tagger
         let eunuchTaggerSwitch = unsafeWindow.document.getElementById('eunuch-tagger-switch');
         let eunuchTaggerBlockDynamic = unsafeWindow.document.getElementById('eunuch-tagger-block-dynamic');
@@ -247,6 +249,7 @@
             let urls = iconUrlBox.value.split(/\n+/);
             urls = urls.map(url => url.trim()).filter(url => !!url);
             GM_setValue('like_icons', urls);
+            likeIconText.innerText = `已更新订阅，使用${urls.length}个动画`;
         });
         updateLikerBtn.addEventListener('click', async () => {
             boboLikerUpdating = true;
@@ -284,9 +287,12 @@
         });
     }
     let createEmoteBtn = function() {
-        const settingBtnEl = unsafeWindow.document.createElement("div");
+        // 将配置按钮添加到头像弹出面板
+        let linkItem = unsafeWindow.document.querySelector('.links-item');
+        if (linkItem && !linkItem.classList.contains('contains-setting')){
+            const settingBtnEl = unsafeWindow.document.createElement("div");
 
-        settingBtnEl.innerHTML = `
+            settingBtnEl.innerHTML = `
 <div class="single-link-item">
   <div class="link-title"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
       class="link-icon">
@@ -308,13 +314,11 @@
   </svg>
 </div>
       `;
-        // 将配置按钮添加到头像弹出面板
-        let linkItem = unsafeWindow.document.querySelector('.links-item');
-        if (linkItem){
             settingBtnEl.addEventListener('click', () => {
                 createEmotePanel();
             });
             linkItem.appendChild(settingBtnEl);
+            linkItem.classList.add('contains-setting');
         }
     }
 
@@ -549,20 +553,24 @@
     }
 
     // 页面加载完成后添加表情配置面板按钮
-    unsafeWindow.addEventListener('load', () => {
-        // 在动态页面增加设置按钮，用来更新点赞者列表
+    unsafeWindow.addEventListener('DOMContentLoaded', () => {
         let emoteMutation = new MutationObserver(async (mutationList, observer) => {
             for (const mutation of mutationList) {
                 if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
-                if (mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains('v-popover')) {
-                    createEmoteBtn();
-                    emoteMutation.disconnect();
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('right-entry')) {
+                        vPoperMutation.observe(node.childNodes[0], { childList: true, subtree: true });
+                        emoteMutation.disconnect();
+                    }
                 }
             }
         });
-        let headerWarp = unsafeWindow.document.querySelector('.header-avatar-wrap');
-        if (headerWarp) {
-            emoteMutation.observe(headerWarp, { childList: true, subtree: true });
+
+        let entryNode = unsafeWindow.document.querySelector('.right-entry');
+        if (entryNode) {
+            vPoperMutation.observe(entryNode.childNodes[0], { childList: true, subtree: true });
+        } else {
+            emoteMutation.observe(unsafeWindow.document.body, { childList: true, subtree: true });
         }
     });
 
@@ -620,7 +628,7 @@
                 response.text = JSON.stringify(response_json);
             } else if (request.url.includes('//api.bilibili.com/x/polymer/web-dynamic/v1/detail')){
                 // 动态详情页
-                console.log(request.url);
+                // console.log(request.url);
                 let response_json = JSON.parse(response.text);
                 injectDynamicItem(response_json?.data?.item, emote_dict, chn_emote_dict, likers);
                 addDynamicUserTag(response_json?.data?.item, eunuchs);
