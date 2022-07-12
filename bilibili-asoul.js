@@ -129,7 +129,7 @@
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
-              <div>点赞特效（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
               <button id="bobo-like-icon-update">更新订阅</button>
               <hr/>
@@ -165,6 +165,7 @@
         });
         updateIconBtn.addEventListener('click', async () => {
             let urls = iconUrlBox.value.split(/\n+/);
+            urls = urls.map(url => url.trim()).filter(url => !!url);
             GM_setValue('like_icons', urls);
         });
         unsafeWindow.document.getElementById('bobo-emotes-setting-cancel').addEventListener('click', () => {
