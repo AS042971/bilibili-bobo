@@ -17,7 +17,6 @@
 // @grant        GM_xmlhttpRequest
 // @connect      git.asf.ink
 // @connect      api.bilibili.com
-// @connect      47.114.189.50
 // ==/UserScript==
 
 (async function() {
@@ -146,7 +145,7 @@
     let refreshEunuchs = async function() {
         const queryData = await new Promise(resolve => {
             GM_xmlhttpRequest({
-                url: 'http://47.114.189.50:3333/get_eunuchs',
+                url: 'https://git.asf.ink/milkiq/bilibili-uids/raw/branch/master/eunuchs.json',
                 method : "GET",
                 onload : function(data){
                     try {
