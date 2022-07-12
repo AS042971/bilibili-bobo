@@ -554,6 +554,17 @@
 
     // 页面加载完成后添加表情配置面板按钮
     unsafeWindow.addEventListener('DOMContentLoaded', () => {
+        let vPoperMutation = new MutationObserver(async (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+                for (const node of mutation.addedNodes) {
+                    if(node.classList?.contains('v-popover') && node.classList?.contains('is-bottom')) {
+                        createEmoteBtn();
+                        vPoperMutation.disconnect();
+                    }
+                }
+            }
+        });
         let emoteMutation = new MutationObserver(async (mutationList, observer) => {
             for (const mutation of mutationList) {
                 if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
