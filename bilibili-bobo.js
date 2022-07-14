@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.3
+// @version      0.3.4
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -39,24 +39,19 @@
             resolve();
         }
     });
-
-    let animateArr = [
-      // 'https://i0.hdslb.com/bfs/garb/item/6b78a5ed732b985f0aebde5e9d1a53d8562d0c80.bin',
-      // 'https://i0.hdslb.com/bfs/garb/item/5c8f8e8bab18149915c3804b8c12044232a40103.bin',
-      // 'https://i0.hdslb.com/bfs/garb/item/0c8e72f4810842303ca1ab4cac165c737a1cf104.bin',
-      // 'https://i0.hdslb.com/bfs/garb/item/9fae5a001015cfe99949ee0a1a70f21f00d0c206.bin',
-      // 'https://i0.hdslb.com/bfs/garb/item/f9a3f4aadb1cf268fc411c7b4cc99d07df3e778a.bin',
-      'https://i0.hdslb.com/bfs/garb/item/83b07276da522b9cac7803160a2c3338249f2cb8.bin',
-    ]
-    let times = 0;
-    let timer = setInterval(() => {
-      let data = unsafeWindow.__INITIAL_STATE__;
-      if (data || times > 50) {
-          if (data && !data.videoData.user_garb.url_image_ani_cut) data.videoData.user_garb.url_image_ani_cut = animateArr[0];
-          clearInterval(timer);
-      }
-      times++;
-    }, 100);
+    
+    const animateArr = GM_getValue('like_icons', []);
+    if (animateArr.length > 0) {
+      let times = 0;
+      let timer = setInterval(() => {
+        let data = unsafeWindow.__INITIAL_STATE__;
+        if (data || times > 50) {
+            if (data && !data.videoData.user_garb.url_image_ani_cut) data.videoData.user_garb.url_image_ani_cut = animateArr[0];
+            clearInterval(timer);
+        }
+        times++;
+      }, 100);
+    }
 
     // 下载url中的表情包并解析
     const defaultURLs = [
@@ -336,7 +331,8 @@
     let injectDynamicItem = function(item, emote_dict, chn_emote_dict, likers) {
 
         if (likers) {
-            if (item?.basic?.like_icon && !item.basic.like_icon.action_url) {
+            const animateArr = GM_getValue('like_icons', []);
+            if (animateArr.length > 0 && item?.basic?.like_icon && !item.basic.like_icon.action_url) {
               item.basic.like_icon.action_url = animateArr[0];
             }
             const showCard = GM_getValue('show_card', false);
