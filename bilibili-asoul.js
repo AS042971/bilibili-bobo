@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.3
+// @version      0.3.5
 // @description  在 Bilibili 表情包中增加A-Soul二创系列
 // @author       as042971
 // @author       milkiq
@@ -65,7 +65,13 @@
                 onload : function(data){
                     try {
                         let json = JSON.parse(data.responseText);
-                        resolve(json.data.packages)
+                        if (json.data?.package) {
+                            resolve(json.data.packages)
+                        } else if ('emote' in json.data) {
+                            resolve([json.data])
+                        } else {
+                            resolve([]);
+                        }
                     } catch (error) {
                         resolve([]);
                     }
@@ -92,7 +98,7 @@
             "jump_title": resolved_emote.meta.alias
         }
     }
-    let refershEmote = async function(urls) {
+    let refreshEmote = async function(urls) {
         urls = urls.concat(defaultURLs);
         let resolved_emote_packs = [];
         for (let i in urls) {
@@ -156,7 +162,7 @@
             el.innerText = '正在更新订阅，请稍等…';
             let urls = urlBox.value.split(/\n+/);
             GM_setValue('emote_urls', urls);
-            await refershEmote(urls);
+            await refreshEmote(urls);
             el.innerText = '更新订阅成功，请刷新网页后使用！';
             GM_setValue('last_update', Date());
             boboListUpdating = false;
@@ -324,7 +330,7 @@
     xhookLoad.then(async () => {
         // 动态直接通过 Hook XHR 响应完成
         if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refershEmote([])
+            await refreshEmote([])
         }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})
@@ -414,7 +420,7 @@
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
     const jsonpMutation = new MutationObserver(async (mutationList, observer) => {
         if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refershEmote([])
+            await refreshEmote([])
         }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})

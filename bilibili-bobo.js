@@ -3,7 +3,7 @@
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.4
+// @version      0.3.5
 // @description  在 Bilibili 表情包中增加啵啵系列
 // @author       as042971
 // @author       milkiq
@@ -65,7 +65,13 @@
                 onload : function(data){
                     try {
                         let json = JSON.parse(data.responseText);
-                        resolve(json.data.packages)
+                        if (json.data?.package) {
+                            resolve(json.data.packages)
+                        } else if ('emote' in json.data) {
+                            resolve([json.data])
+                        } else {
+                            resolve([]);
+                        }
                     } catch (error) {
                         resolve([]);
                     }
@@ -92,7 +98,7 @@
             "jump_title": resolved_emote.meta.alias
         }
     }
-    let refershEmote = async function(urls) {
+    let refreshEmote = async function(urls) {
         urls = urls.concat(defaultURLs);
         let resolved_emote_packs = [];
         for (let i in urls) {
@@ -117,7 +123,7 @@
         GM_setValue('chn_emote_dict', chn_emote_dict);
     }
 
-    let refershLikers = async function() {
+    let refreshLikers = async function() {
         const queryData = await new Promise(resolve => {
             GM_xmlhttpRequest({
                 url: 'https://git.asf.ink/milkiq/bilibili-bobo-likers/raw/branch/master/likers.json',
@@ -236,7 +242,7 @@
             el.innerText = '正在更新订阅，请稍等…';
             let urls = urlBox.value.split(/\n+/);
             GM_setValue('emote_urls', urls);
-            await refershEmote(urls);
+            await refreshEmote(urls);
             el.innerText = '更新订阅成功，请刷新网页后使用！';
             GM_setValue('last_update', Date());
             boboListUpdating = false;
@@ -250,7 +256,7 @@
         updateLikerBtn.addEventListener('click', async () => {
             boboLikerUpdating = true;
             likerText.innerText = '正在更新数据，请稍等…';
-            await refershLikers();
+            await refreshLikers();
             likerText.innerText = '更新数据成功，请刷新网页后使用！';
             GM_setValue('last_likers_update', Date());
             boboLikerUpdating = false;
@@ -598,7 +604,7 @@
     xhookLoad.then(async () => {
         // 动态直接通过 Hook XHR 响应完成
         if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refershEmote([])
+            await refreshEmote([])
         }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})
@@ -607,7 +613,7 @@
         const likeIcons = GM_getValue('like_icons', [])
 
         if (GM_getValue('bobo_liker_uids', []).length == 0) {
-            await refershLikers();
+            await refreshLikers();
         }
         const likers = GM_getValue('bobo_liker_uids', []);
         const eunuchs = GM_getValue('eunuchs', []);
@@ -717,10 +723,10 @@
 
         return new MutationObserver(async (mutationList, observer) => {
             if ((resolved_emote_packs ?? []).length == 0) {
-                await refershEmote([])
+                await refreshEmote([])
             }
             if ((likers ?? []).length == 0) {
-                await refershLikers();
+                await refreshLikers();
             }
 
             for (const mutation of mutationList) {
