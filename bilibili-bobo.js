@@ -65,7 +65,7 @@
                 onload : function(data){
                     try {
                         let json = JSON.parse(data.responseText);
-                        if (json.data?.package) {
+                        if (json.data?.packages) {
                             resolve(json.data.packages)
                         } else if ('emote' in json.data) {
                             resolve([json.data])

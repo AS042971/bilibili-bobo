@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         Bilibili A-Soul二创表情包
+// @name         Bilibili 自定义表情包
 // @namespace    https://github.com/AS042971/bilibili-bobo
 // @supportURL   https://github.com/AS042971/bilibili-bobo/issues
 // @license      BSD-3
-// @version      0.3.5
-// @description  在 Bilibili 表情包中增加A-Soul二创系列
+// @version      0.3.6
+// @description  在 Bilibili 表情包中增加自定义表情
 // @author       as042971
 // @author       milkiq
 // @match        https://*.bilibili.com/*
@@ -54,9 +54,6 @@
     }
 
     // 下载url中的表情包并解析
-    const defaultURLs = [
-        "https://git.asf.ink/AS042971/bili-emotes/raw/branch/main/asoul.json"
-    ]
     let resolveEmoteURL = function(url){
         return new Promise(resolve => {
             GM_xmlhttpRequest({
@@ -99,7 +96,6 @@
         }
     }
     let refreshEmote = async function(urls) {
-        urls = urls.concat(defaultURLs);
         let resolved_emote_packs = [];
         for (let i in urls) {
             if (urls[i].trim()) {
@@ -329,9 +325,6 @@
     // 添加XHR钩子，用于增加表情包和注入动态
     xhookLoad.then(async () => {
         // 动态直接通过 Hook XHR 响应完成
-        if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refreshEmote([])
-        }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})
         const chn_emote_dict = GM_getValue('chn_emote_dict', {})
@@ -419,9 +412,6 @@
     // 添加jsonp钩子，评论数据使用jsonp方式获取，修改jquery的函数进行代理
     // jquery jsonp 原理见 https://www.cnblogs.com/aaronjs/p/3785646.html
     const jsonpMutation = new MutationObserver(async (mutationList, observer) => {
-        if (GM_getValue('resolved_emote_packs', []).length == 0) {
-            await refreshEmote([])
-        }
         const resolved_emote_packs = GM_getValue('resolved_emote_packs', [])
         const emote_dict = GM_getValue('emote_dict', {})
         const chn_emote_dict = GM_getValue('chn_emote_dict', {})
