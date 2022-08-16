@@ -16,6 +16,7 @@
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @connect      git.asf.ink
+// @connect      gitee.com
 // @connect      api.bilibili.com
 // @connect      i0.hdslb.com
 // ==/UserScript==
@@ -55,7 +56,7 @@
 
     // 下载url中的表情包并解析
     const defaultURLs = [
-        "https://git.asf.ink/AS042971/bili-emotes/raw/branch/main/asoul.json"
+        "https://gitee.com/milkiq/bili-emotes/raw/main/asoul.json"
     ]
     let resolveEmoteURL = function(url){
         return new Promise(resolve => {
@@ -131,12 +132,12 @@
         wrapperEl.setAttribute('style', 'width: 100%;height: 100%;position:fixed;top: 0;left: 0;background: rgba(0,0,0,0.5);z-index: 10000;justify-content: center;align-items: center;display: flex;');
         wrapperEl.innerHTML = `
             <div id="bobo-emotes-settings-dialog-body" style="width: 400px;height: 500px;background: #fff;border-radius:10px;padding: 30px;overflow: auto;">
-              <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <div>点赞动画（<a href="https://gitee.com/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
               <div id="bobo-like-icon-text">随机使用订阅的动画</div>
               <button id="bobo-like-icon-update">更新订阅</button>
               <hr/>
-              <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <div>附加表情（<a href="https://gitee.com/milkiq/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
               <button id="bobo-emotes-update-likes">更新订阅</button>

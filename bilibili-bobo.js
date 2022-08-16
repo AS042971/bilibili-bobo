@@ -16,6 +16,7 @@
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @connect      git.asf.ink
+// @connect      gitee.com
 // @connect      api.bilibili.com
 // @connect      i0.hdslb.com
 // ==/UserScript==
@@ -55,7 +56,7 @@
 
     // 下载url中的表情包并解析
     const defaultURLs = [
-        "https://git.asf.ink/AS042971/bili-emotes/raw/branch/main/%E5%95%B5%E5%95%B5.json"
+        "https://gitee.com/milkiq/bili-emotes/raw/main/%E5%95%B5%E5%95%B5.json"
     ]
     let resolveEmoteURL = function(url){
         return new Promise(resolve => {
@@ -126,7 +127,7 @@
     let refreshLikers = async function() {
         const queryData = await new Promise(resolve => {
             GM_xmlhttpRequest({
-                url: 'https://git.asf.ink/milkiq/bilibili-bobo-likers/raw/branch/master/likers.json',
+                url: 'https://gitee.com/milkiq/bilibili-uids/raw/master/likers.json',
                 method : "GET",
                 onload : function(data){
                     try {
@@ -147,7 +148,7 @@
     let refreshEunuchs = async function() {
         const queryData = await new Promise(resolve => {
             GM_xmlhttpRequest({
-                url: 'https://git.asf.ink/milkiq/bilibili-uids/raw/branch/master/eunuchs.json',
+                url: 'https://gitee.com/milkiq/bilibili-uids/raw/master/eunuchs.json',
                 method : "GET",
                 onload : function(data){
                     try {
@@ -180,12 +181,12 @@
               <button id="bobo-likers-update">更新啵版列表</button>
               <div id="bobo-likers-update-text"></div>
               <hr />
-              <div>点赞动画（<a href="https://git.asf.ink/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <div>点赞动画（<a href="https://gitee.com/milkiq/bilibili-like-icons" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-like-icon-url-input" rows="10" style="width:100%;height: 100px;" wrap="off" placeholder="请在此输入svga动画文件地址，每行一个"></textarea>
               <div id="bobo-like-icon-text">随机使用订阅的动画</div>
               <button id="bobo-like-icon-update">更新订阅</button>
               <hr/>
-              <div>附加表情（<a href="https://git.asf.ink/AS042971/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
+              <div>附加表情（<a href="https://gitee.com/milkiq/bili-emotes" target="_blank" style="color: blue;">获取…</a>）：</div>
               <textarea name="input" id="bobo-emotes-url-input" rows="10" style="width:100%;" wrap="off" placeholder="请在此输入附加表情的订阅地址，每行一个"></textarea>
               <div id="bobo-emotes-update-text"></div>
               <button id="bobo-emotes-update-likes">更新订阅</button>
